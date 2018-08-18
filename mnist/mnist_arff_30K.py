@@ -8,8 +8,8 @@ from keras.callbacks import ModelCheckpoint
 from keras import backend as K
 
 
-filepath_train = "./train.arff"
-filepath_test = "./test.arff"
+filepath_train = "train.arff"
+filepath_test = "test.arff"
 
 
 nb_filters = 32
