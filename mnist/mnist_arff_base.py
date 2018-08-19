@@ -30,7 +30,7 @@ model.add(Activation('relu'))
 model.add(MaxPooling2D(pool_size=(nb_pool, nb_pool)))
 model.add(Dropout(0.25))
 
-model.add(Flatten(), name="Flatten")
+model.add(Flatten(name="Flatten"))
 model.add(Dense(128))
 model.add(Activation('relu'))
 model.add(Dropout(0.5))
@@ -51,6 +51,6 @@ X_30K = X_train[:30000]
 y_30K = y_train[:30000]
 
 model.fit(X_30K, y_30K, batch_size=100, epochs=5)
-model.save("model_30K.h5")
+model.save("model_base.h5")
 
 K.clear_session()                    
