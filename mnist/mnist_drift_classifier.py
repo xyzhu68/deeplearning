@@ -5,6 +5,11 @@ from keras.layers import Input, Dense, Activation, Dropout
 from keras.utils import to_categorical
 from keras import backend as K
 
+import tensorflow as tf
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+sess = tf.Session(config=config)
+
 filepath_train = "train.arff"
 filepath_test = "test.arff"
 
@@ -57,5 +62,5 @@ model_Ei.save("Ei.h5")
 out_Ci = Dense(10, activation="softmax")(out)
 model_Ci = Model(class_input, out_Ci)
 model_Ci.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
-model_Ci.fit(X_train_Ci, y_train_Ci, batch_size=100, epochs=5)
+model_Ci.fit(X_train_Ci, y_train_Ci, batch_size=100, epochs=20)
 model_Ci.save("Ci.h5")

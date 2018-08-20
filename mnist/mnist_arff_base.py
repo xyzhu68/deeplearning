@@ -7,6 +7,10 @@ from keras.layers.convolutional import Conv2D, MaxPooling2D
 from keras.callbacks import ModelCheckpoint
 from keras import backend as K
 
+import tensorflow as tf
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+sess = tf.Session(config=config)
 
 filepath_train = "train.arff"
 filepath_test = "test.arff"
@@ -50,7 +54,7 @@ y_train = to_categorical(y_train, 10)
 X_30K = X_train[:30000]
 y_30K = y_train[:30000]
 
-model.fit(X_30K, y_30K, batch_size=100, epochs=5)
+model.fit(X_30K, y_30K, batch_size=100, epochs=20)
 model.save("model_base.h5")
 
 K.clear_session()                    
