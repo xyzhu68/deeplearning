@@ -4,6 +4,15 @@ from keras.models import load_model, Model
 from keras.layers import Input, Dense, Activation, Dropout
 from keras.utils import to_categorical
 from keras import backend as K
+import sys
+
+#check arguments
+nbArgs = len(sys.argv)
+if nbArgs < 2:
+    print("Please define which classiefier shall be created: Ci or Ei")
+    exit()
+arg1 = sys.argv[1]
+
 
 import tensorflow as tf
 config = tf.ConfigProto()
@@ -14,6 +23,7 @@ filepath_train = "train.arff"
 filepath_test = "test.arff"
 
 
+
 # read data
 data, meta = arff.loadarff(filepath_train)
 dataArray = np.asarray(data.tolist(), dtype=np.float32)
@@ -21,8 +31,8 @@ X_train = np.delete(dataArray, 784, 1) / 255
 X_train = X_train.reshape(-1, 28, 28, 1)
 y_train = dataArray[:,784]
 
-X_train = X_train[30000:]
-y_train = y_train[30000:]
+X_train = X_train[50000:]
+y_train = y_train[50000:]
 
 # exchange 2 and 9
 y_train_Ei = [1 if x == 2 or x == 9 else 0 for x in y_train]
@@ -51,16 +61,15 @@ out = visual_model(class_input)
 out = Dense(128, activation="relu")(out)
 out = Dropout(0.5)(out)
 
-"""
-out_Ei = Dense(1, activation="sigmoid")(out)
-model_Ei = Model(class_input, out_Ei)
-model_Ei.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['accuracy'])
-model_Ei.fit(X_train, y_train_Ei, batch_size=100, epochs=5)
-model_Ei.save("Ei.h5")
-"""
-
-out_Ci = Dense(10, activation="softmax")(out)
-model_Ci = Model(class_input, out_Ci)
-model_Ci.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
-model_Ci.fit(X_train_Ci, y_train_Ci, batch_size=100, epochs=20)
-model_Ci.save("Ci.h5")
+if arg1 == "Ei":
+    out_Ei = Dense(1, activation="sigmoid")(out)
+    model_Ei = Model(class_input, out_Ei)
+    model_Ei.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+    model_Ei.fit(X_train, y_train_Ei, batch_size=100, epochs=20)
+    model_Ei.save("Ei.h5")
+else:
+    out_Ci = Dense(10, activation="softmax")(out)
+    model_Ci = Model(class_input, out_Ci)
+    model_Ci.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+    model_Ci.fit(X_train_Ci, y_train_Ci, batch_size=100, epochs=20)
+    model_Ci.save("Ci.h5")

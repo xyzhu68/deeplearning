@@ -51,10 +51,10 @@ X_train = X_train.reshape(-1, img_rows, img_cols, 1)
 y_train = dataArray[:,784]
 y_train = to_categorical(y_train, 10)
 
-X_30K = X_train[:30000]
-y_30K = y_train[:30000]
+X_50K = X_train[:50000]
+y_50K = y_train[:50000]
 
-model.fit(X_30K, y_30K, batch_size=100, epochs=20)
+model.fit(X_50K, y_50K, batch_size=100, epochs=20)
 model.save("model_base.h5")
 
 K.clear_session()                    
