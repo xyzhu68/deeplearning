@@ -1,2 +1,3 @@
 https://blog.keras.io/building-powerful-image-classification-models-using-very-little-data.html
 https://blog.feedly.com/transfer-learning-in-nlp/
+https://arxiv.org/pdf/1703.09039.pdf
