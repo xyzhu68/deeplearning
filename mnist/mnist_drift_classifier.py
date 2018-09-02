@@ -138,8 +138,10 @@ if arg1 == "Ei":
     model_Ei.fit(X_train, y_train, validation_data=(X_test, y_test), batch_size=100, epochs=5)
     #model_Ei.save("Ei.h5")
 else:
+    y_train = to_categorical(y_train, 10)
+    y_test = to_categorical(y_test, 10)
     out_Ci = Dense(10, activation="softmax")(out)
     model_Ci = Model(class_input, out_Ci)
     model_Ci.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
-    model_Ci.fit(X_train_Ci, y_train_Ci, batch_size=100, epochs=20)
-    model_Ci.save("Ci.h5")
+    model_Ci.fit(X_train, y_train, validation_data=(X_test, y_test), batch_size=100, epochs=5)
+    #model_Ci.save("Ci.h5")

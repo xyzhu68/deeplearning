@@ -17,3 +17,29 @@ model tested using Augmented images:
 accuracy 0.9621
 data: 5K normal, 5K augmented (test data)
 
+Flip
+Ci:
+Train on 60000 samples, validate on 10000 samples
+Epoch 1/5
+60000/60000 [==============================] - 169s 3ms/step - loss: 0.4920 - acc: 0.8405 - val_loss: 0.1722 - val_acc: 0.9460
+Epoch 2/5
+60000/60000 [==============================] - 182s 3ms/step - loss: 0.2547 - acc: 0.9205 - val_loss: 0.1425 - val_acc: 0.9540
+Epoch 3/5
+60000/60000 [==============================] - 159s 3ms/step - loss: 0.2122 - acc: 0.9324 - val_loss: 0.1136 - val_acc: 0.9629
+Epoch 4/5
+60000/60000 [==============================] - 195s 3ms/step - loss: 0.1853 - acc: 0.9420 - val_loss: 0.1159 - val_acc: 0.9621
+Epoch 5/5
+60000/60000 [==============================] - 204s 3ms/step - loss: 0.1702 - acc: 0.9459 - val_loss: 0.1216 - val_acc: 0.9611
+
+Ei:
+Train on 120000 samples, validate on 20000 samples
+Epoch 1/5
+120000/120000 [==============================] - 308s 3ms/step - loss: 0.4146 - acc: 0.8218 - val_loss: 0.3716 - val_acc: 0.8474
+Epoch 2/5
+120000/120000 [==============================] - 306s 3ms/step - loss: 0.3742 - acc: 0.8443 - val_loss: 0.3546 - val_acc: 0.8532
+Epoch 3/5
+120000/120000 [==============================] - 306s 3ms/step - loss: 0.3651 - acc: 0.8483 - val_loss: 0.3501 - val_acc: 0.8563
+Epoch 4/5
+120000/120000 [==============================] - 308s 3ms/step - loss: 0.3603 - acc: 0.8515 - val_loss: 0.3476 - val_acc: 0.8561
+Epoch 5/5
+120000/120000 [==============================] - 308s 3ms/step - loss: 0.3571 - acc: 0.8525 - val_loss: 0.3486 - val_acc: 0.8572
