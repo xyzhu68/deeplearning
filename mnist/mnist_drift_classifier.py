@@ -135,7 +135,7 @@ if arg1 == "Ei":
     out_Ei = Dense(1, activation="sigmoid")(out)
     model_Ei = Model(class_input, out_Ei)
     model_Ei.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['accuracy'])
-    model_Ei.fit(X_train, y_train, validation_data=(X_test, y_test), batch_size=100, epochs=5)
+    model_Ei.fit(X_train, y_train, validation_data=(X_test, y_test), batch_size=100, epochs=20)
     #model_Ei.save("Ei.h5")
 else:
     y_train = to_categorical(y_train, 10)
@@ -143,5 +143,5 @@ else:
     out_Ci = Dense(10, activation="softmax")(out)
     model_Ci = Model(class_input, out_Ci)
     model_Ci.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
-    model_Ci.fit(X_train, y_train, validation_data=(X_test, y_test), batch_size=100, epochs=5)
+    model_Ci.fit(X_train, y_train, validation_data=(X_test, y_test), batch_size=100, epochs=20)
     #model_Ci.save("Ci.h5")

@@ -1,0 +1,14 @@
+Structure 1: Conv2D-Relu-Maxpooling + Conv2D-Relu-Maxpooling, filter=32/64, batch_size=100, epochs=20, training: 60K, validation: 10K
+    base: loss: 0.0234 - acc: 0.9931 - val_loss: 0.0211 - val_acc: 0.9935, 225s
+    Ci: loss: 0.1039 - acc: 0.9675 - val_loss: 0.0908 - val_acc: 0.9740, 225s
+    Ei: loss: 0.3422 - acc: 0.8591 - val_loss: 0.3345 - val_acc: 0.8642, 430s
+
+Structure 2: Conv2D-Conv2D-Relu-Maxpooling + Conv2D-Conv2D-Relu-Maxpooling, filter=32/64, batch_size=100, epochs=20, training: 60K, validation: 10K
+    base: loss: 0.0194 - acc: 0.9937 - val_loss: 0.0185 - val_acc: 0.9943, 400s
+    Ci: loss: 0.0894 - acc: 0.9719 - val_loss: 0.0861 - val_acc: 0.9737, 400s
+    Ei: loss: 0.3484 - acc: 0.8562 - val_loss: 0.3307 - val_acc: 0.8687, 720s
+
+Structure 3: Conv2D-Conv2D-Relu-Maxpooling + Conv2D-Conv2D-Relu-Maxpooling, filter=64/128, batch_size=100, epochs=20, training: 60K, validation: 10K
+    base: loss: 0.0112 - acc: 0.9962 - val_loss: 0.0290 - val_acc: 0.9939, 840s
+    Ci: loss: 0.0725 - acc: 0.9778 - val_loss: 0.1099 - val_acc: 0.9732, 800s
+    Ei: loss: 0.3458 - acc: 0.8573 - val_loss: 0.3650 - val_acc: 0.8438, 1600s

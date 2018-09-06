@@ -19,9 +19,9 @@ monkey_VGG_path = "monkey_vgg_weighs.h5"
 train_data_dir = os.path.abspath("../../training/training")
 validation_data_dir = os.path.abspath("../../validation/validation")
 
-# pre-trained VGG16 network
+# pre-trained Xception network
 input_tensor = Input(shape=(img_width,img_height,3))
-base_model = applications.VGG16(include_top=False, weights='imagenet', input_tensor=input_tensor)
+base_model = applications.Xception(include_top=False, weights='imagenet', input_tensor=input_tensor)
 
 fc_model = Sequential()
 fc_model.add(Flatten(input_shape=base_model.output_shape[1:]))
@@ -33,7 +33,7 @@ fc_model.load_weights(monkey_VGG_path)
 
 # add the model on the convolutional base
 model = Model(input=base_model.input, output=fc_model(base_model.output))
-for layer in model.layers[:15]:
+for layer in model.layers[:126]:
     layer.trainable = False
 
 model.compile(loss='categorical_crossentropy',
