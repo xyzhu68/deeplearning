@@ -26,14 +26,15 @@ def load_data(dataPath):
     y = dataArray[:,784]
     return (X, y)
 
-def data_generator(streamSize): 
-    X, y = load_data(filepath_train)
+def data_generator(streamSize, X, y): 
+    # X, y = load_data(filepath_train)
     count = 0
     while True:
         X_result = X[count : count + streamSize]
         y_result = y[count : count + streamSize]
         yield X_result, y_result
         count += streamSize
+        print("count: %d" % count)
 
 def flip_images(X, y):
     datagen = ImageDataGenerator(
@@ -89,26 +90,29 @@ accArray_E = []
 lossArray = []
 accArray = []
 indices = []
+
+# get data
+X_train, y_train = load_data(filepath_train)
 # training in base phase
 for i in range(nbBaseBatches):
     print(i)
-    gen = data_generator(sizeOneBatch)
+    gen = data_generator(sizeOneBatch, X_train, y_train)
     X, y = next(gen)
     y_E = np.zeros(sizeOneBatch)
     result_E = model_Ei.fit(X, y_E, batch_size=50, epochs=10)
     y = to_categorical(y, 10)
     result_C = model_Ci.fit(X, y, batch_size=50, epochs=10)
 
-    lossArray.append(result_C.history["loss"])
-    accArray.append(result_C.history["acc"])
-    lossArray_E.append(result_E.history["loss"])
-    accArray_E.append(result_E.history["acc"])
+    lossArray.append(np.mean(result_C.history["loss"]))
+    accArray.append(np.mean(result_C.history["acc"]))
+    lossArray_E.append(np.mean(result_E.history["loss"]))
+    accArray_E.append(np.mean(result_E.history["acc"]))
     indices.append(i)
 
 # adaption: data changed
 for i in range(nbBaseBatches, nbBatches):
     print(i)
-    gen = data_generator(sizeOneBatch)
+    gen = data_generator(sizeOneBatch, X_train, y_train)
     X, y = next(gen)
     X, y = flip_images(X, y)
     # evaluate
@@ -127,7 +131,7 @@ for i in range(nbBaseBatches, nbBatches):
     model_Ci.fit(X, y, batch_size=50, epochs=10)
 
 
-np.save("mnist_drift_clf_results.npz", acc=accArray, acc_E=accArray_E, loss=lossArray, loss_E=lossArray_E, indices=indices)
+np.savez("mnist_drift_clf_results.npz", acc=accArray, acc_E=accArray_E, loss=lossArray, loss_E=lossArray_E, indices=indices)
 # plt.plot(indices, lossArray, label="loss")
 # plt.legend()
 # plt.show()

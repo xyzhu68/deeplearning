@@ -404,6 +404,7 @@ def test_run():
         y_train = training_set[:, -1]
         for x, y in zip(x_train, y_train):
             tree.update(x, y)
+            print(x)
         y_pred = tree.predict(x_test)
         print('Training set:', n, end=', ')
         print('ACCURACY: %.4f' % accuracy_score(y_test, y_pred))
