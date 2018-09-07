@@ -49,8 +49,9 @@ def data_generator(streamSize, X, y):
     while True:
         X_result = X[count : count + streamSize]
         y_result = y[count : count + streamSize]
-        yield X_result, y_result
         count += streamSize
+        yield X_result, y_result
+        
 #  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++    
 
 # settings
@@ -76,9 +77,10 @@ accArray_E = []
 accArray = []
 indices = []
 # training in base phase
+gen = data_generator(sizeOneBatch, X_train, y_train)
 for i in range(nbBaseBatches):
     print(i)
-    gen = data_generator(sizeOneBatch, X_train, y_train)
+    
     X_gen, y_gen = next(gen)
     X_gen = X_gen.reshape(-1, 784)
     y_gen_E = np.zeros(sizeOneBatch)
@@ -102,7 +104,7 @@ for i in range(nbBaseBatches):
 # adaption: data changed
 for i in range(nbBaseBatches, nbBatches):
     print(i)
-    gen = data_generator(sizeOneBatch, X_train, y_train)
+
     X_gen, y_gen = next(gen)
     X_gen, y_gen = flip_images(X_gen, y_gen)
     y_gen = y_gen.reshape(-1,)
