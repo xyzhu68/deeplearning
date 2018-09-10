@@ -7,6 +7,7 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras import backend as K
 import sys
 import matplotlib.pyplot as plt
+from data_provider import *
 
 # settings for GPU
 import tensorflow as tf
@@ -37,28 +38,28 @@ def data_generator(streamSize):
         yield X_result, y_result
         
 
-def flip_images(X, y):
-    datagen = ImageDataGenerator(
-        horizontal_flip=True,
-        vertical_flip=True,
-    )
-    datagen.fit(X)
-    data_it = datagen.flow(X, y, batch_size=1)
+# def flip_images(X, y):
+#     datagen = ImageDataGenerator(
+#         horizontal_flip=True,
+#         vertical_flip=True,
+#     )
+#     datagen.fit(X)
+#     data_it = datagen.flow(X, y, batch_size=1)
     
-    data_list = []
-    y_list = []
-    batch_index = 0
-    while batch_index <= data_it.batch_index:
-        data = data_it.next()
-        #x_data = data[0].reshape((784,))
-        data_list.append(data[0])
-        y_list.append(data[1])
-        batch_index = batch_index + 1
+#     data_list = []
+#     y_list = []
+#     batch_index = 0
+#     while batch_index <= data_it.batch_index:
+#         data = data_it.next()
+#         #x_data = data[0].reshape((784,))
+#         data_list.append(data[0])
+#         y_list.append(data[1])
+#         batch_index = batch_index + 1
 
-    data_array = np.asarray(data_list)
-    data_array = data_array.reshape(-1, 28, 28, 1)
-    y_array = np.asarray(y_list)
-    return (data_array, y_array)
+#     data_array = np.asarray(data_list)
+#     data_array = data_array.reshape(-1, 28, 28, 1)
+#     y_array = np.asarray(y_list)
+#     return (data_array, y_array)
 
 # settings
 totalDataSize = 60000
@@ -100,9 +101,15 @@ for i in range(nbBaseBatches):
     print(i)
     
     X, y = next(gen)
-    y_E = np.zeros(sizeOneBatch)
+    #y_E = np.zeros(sizeOneBatch)
+    #y = to_categorical(y, 10)
+
+    #X, y, y_E = flip_images(X, y, True)
+    X, y, y_E = appear(X, y, True)
+    print(X.shape)
+    print(len(X))
+
     result_E = model_Ei.fit(X, y_E, batch_size=50, epochs=10)
-    y = to_categorical(y, 10)
     result_C = model_Ci.fit(X, y, batch_size=50, epochs=10)
 
     lossArray.append(np.mean(result_C.history["loss"]))
@@ -116,13 +123,17 @@ for i in range(nbBaseBatches, nbBatches):
     print(i)
     
     X, y = next(gen)
-    X, y = flip_images(X, y)
+    # X, y = flip_images(X, y)
+    # y_E = np.full(sizeOneBatch, 1.0)
+    # y = to_categorical(y, 10)
+
+    #X, y, y_E = flip_images(X, y, False)
+    X, y, y_E = appear(X, y, False)
+
     # evaluate
-    y_E = np.full(sizeOneBatch, 1.0)
     loss_E, acc_E = model_Ei.evaluate(X, y_E, batch_size=50)
     lossArray_E.append(loss_E)
     accArray_E.append(acc_E)
-    y = to_categorical(y, 10)
     loss, acc = model_Ci.evaluate(X, y, batch_size=50)
     lossArray.append(loss)
     accArray.append(acc)
