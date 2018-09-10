@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
 
-"""
+
 data = np.load("mnist_drift_clf_results.npz")
 
 indices = data["indices"]
@@ -46,3 +46,4 @@ plt.xlabel("Batch")
 plt.legend()
 plt.show()
 
+"""
