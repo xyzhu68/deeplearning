@@ -7,6 +7,8 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras import backend as K
 import sys
 import matplotlib.pyplot as plt
+from sklearn.utils import shuffle
+
 from data_provider import *
 
 # settings for GPU
@@ -59,6 +61,66 @@ def calc_accuracy(modelC0, modelEi, modelCi, X, y):
         index += 1
     return correct / len(X)
 
+# model from scratch
+def make_model(Ei):
+    nb_filters = 64
+    nb_conv = 3
+    img_rows = 28
+    img_cols = 28
+    nb_pool = 2
+
+    model = Sequential()
+    model.add(Conv2D(nb_filters, (nb_conv, nb_conv),
+                    padding='valid',
+                    input_shape=(img_rows, img_cols, 1)))
+    model.add(Conv2D(nb_filters, (nb_conv, nb_conv), padding='valid'))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(nb_pool, nb_pool)))
+
+    model.add(Conv2D(nb_filters * 2, (nb_conv, nb_conv), padding='valid'))
+    model.add(Conv2D(nb_filters * 2, (nb_conv, nb_conv), padding='valid'))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(nb_pool, nb_pool)))
+    model.add(Dropout(0.25))
+
+    model.add(Flatten(name="Flatten"))
+    model.add(Dense(128))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
+    if Ei:
+        model.add(Dense(1))
+        model.add(Activation('sigmoid'))
+        model.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+    else:
+        model.add(Dense(10))
+        model.add(Activation('softmax'))
+        model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+    
+
+    return model
+
+def make_weighted_model(Ei):
+    model = load_model('model_base.h5')
+    digit_input = model.input
+    out_flatten = model.get_layer("Flatten")
+    visual_model = Model(digit_input, out_flatten.output)
+
+    class_input = Input(shape=(28,28,1))
+    out = visual_model(class_input)
+    out = Dense(128, activation="relu")(out)
+    out = Dropout(0.5)(out)
+
+    if Ei: # error clf
+        out_Ei = Dense(1, activation="sigmoid")(out)
+        model_Ei = Model(class_input, out_Ei)
+        model_Ei.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+        return model_Ei
+    else: # patching clf
+        out_Ci = Dense(10, activation="softmax")(out)
+        model_Ci = Model(class_input, out_Ci)
+        model_Ci.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+        return model_Ci
+
 #  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 # settings
@@ -68,24 +130,27 @@ nbBaseBatches = 20 # size of base dataset
 sizeOneBatch = totalDataSize // nbBatches
 
 # build models using weights from base
-model = load_model('model_base.h5')
-digit_input = model.input
-out_flatten = model.get_layer("Flatten")
-visual_model = Model(digit_input, out_flatten.output)
+# model = load_model('model_base.h5')
+# digit_input = model.input
+# out_flatten = model.get_layer("Flatten")
+# visual_model = Model(digit_input, out_flatten.output)
 
-class_input = Input(shape=(28,28,1))
-out = visual_model(class_input)
-out = Dense(128, activation="relu")(out)
-out = Dropout(0.5)(out)
+# class_input = Input(shape=(28,28,1))
+# out = visual_model(class_input)
+# out = Dense(128, activation="relu")(out)
+# out = Dropout(0.5)(out)
 
-# error clf
-out_Ei = Dense(1, activation="sigmoid")(out)
-model_Ei = Model(class_input, out_Ei)
-model_Ei.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['accuracy'])
-# patching clf
-out_Ci = Dense(10, activation="softmax")(out)
-model_Ci = Model(class_input, out_Ci)
-model_Ci.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+# # error clf
+# out_Ei = Dense(1, activation="sigmoid")(out)
+# model_Ei = Model(class_input, out_Ei)
+# model_Ei.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+# # patching clf
+# out_Ci = Dense(10, activation="softmax")(out)
+# model_Ci = Model(class_input, out_Ci)
+# model_Ci.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+
+model_Ci = make_weighted_model(False)
+model_Ei = make_weighted_model(True)
 
 lossArray_E = []
 accArray_E = []
@@ -95,16 +160,14 @@ indices = []
 accChainedArray = []
 
 # get data
-#X_train, y_train = load_data(filepath_train)
 gen = data_generator(sizeOneBatch)
 # training in base phase
 for i in range(nbBaseBatches):
     print(i)
     
     X, y = next(gen)
-    #y_E = np.zeros(sizeOneBatch)
-    #y = to_categorical(y, 10)
 
+    y_E = None
     if drift_type == "flip":
         X, y, y_E = flip_images(X, y, False)
     elif drift_type == "appear":
@@ -133,23 +196,20 @@ angle = 0 # for rotate
 for i in range(nbBaseBatches, nbBatches):
     print(i)
     
-    X, y = next(gen)
-    # X, y = flip_images(X, y)
-    # y_E = np.full(sizeOneBatch, 1.0)
-    # y = to_categorical(y, 10)
+    X_org, y_org = next(gen)
 
     if drift_type == "flip":
-        X, y, y_E = flip_images(X, y, i >= nbBatches/2)
+        X, y, y_E = flip_images(X_org, y_org, i >= nbBatches/2)
     elif drift_type == "appear":
-        X, y, y_E = appear(X, y, False)
+        X, y, y_E = appear(X_org, y_org, False)
     elif drift_type == "remap":
-        X, y, y_E = remap(X, y, i < nbBatches/2)
+        X, y, y_E = remap(X_org, y_org, i < nbBatches/2)
     elif (drift_type == "rotate"):
         if i > 50 and i < 85 and angle <= 180:
             angle += 5
         else:
             angle = 0
-        X, y, y_E = rot(X, y, angle)
+        X, y, y_E = rot(X_org, y_org, angle)
 
     # evaluate
     loss_E, acc_E = model_Ei.evaluate(X, y_E, batch_size=50)
@@ -163,7 +223,12 @@ for i in range(nbBaseBatches, nbBatches):
     accChainedArray.append(accChained)
 
     # training
-    model_Ei.fit(X, y_E, batch_size=50, epochs=10)
+    y_E_org = np.zeros(len(y_E))
+    X_combine = np.concatenate((X_org, X))
+    y_combine = np.concatenate((y_E_org, y_E))
+    X_combine, y_combine = shuffle(X_combine, y_combine)
+    model_Ei.fit(X_combine, y_combine, batch_size=50, epochs=10)
+    #model_Ei.fit(X, y_E, batch_size=50, epochs=10)
     model_Ci.fit(X, y, batch_size=50, epochs=10)
 
 npFileName = "mnist_drift_{0}_weighted.npz".format(drift_type)
@@ -182,10 +247,3 @@ plt.xlabel("Batch")
 plt.legend()
 plt.show()
 
-# # result of loss
-# plt.plot(indices, lossArray, label="loss patching clf")
-# plt.plot(indices, lossArray_E, label="loss error clf")
-# plt.title("Loss")
-# plt.ylabel("Loss")
-# plt.xlabel("Batch")
-# plt.show()
