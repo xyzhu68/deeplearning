@@ -145,8 +145,8 @@ for i in range(nbBaseBatches, nbBatches):
     elif drift_type == "remap":
         X, y, y_E = remap(X, y, i < nbBatches/2)
     elif (drift_type == "rotate"):
-        if i > 50 and i < 90:
-            angle += 6
+        if i > 50 and i < 85 and angle <= 180:
+            angle += 5
         else:
             angle = 0
         X, y, y_E = rot(X, y, angle)
