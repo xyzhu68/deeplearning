@@ -18,7 +18,14 @@ sess = tf.Session(config=config)
 filepath_train = "train.arff"
 filepath_test = "test.arff"
 
+#check arguments
+nbArgs = len(sys.argv)
+if nbArgs < 2:
+    print("Please define drift type")
+    exit()
+drift_type = sys.argv[1]
 
+# Functions +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def load_data(dataPath):
     data, _ = arff.loadarff(dataPath)
     dataArray = np.asarray(data.tolist(), dtype=np.float)
@@ -37,29 +44,22 @@ def data_generator(streamSize):
         print("count: %d" % count)
         yield X_result, y_result
         
+def calc_accuracy(modelC0, modelEi, modelCi, X, y):
+    predictEi = modelEi.predict(X)
+    index = 0
+    correct = 0
+    predict = None
+    for p in predictEi:
+        if p[0] > 0.5:
+            predict = modelCi.predict(X[index].reshape(1, 28, 28, 1), batch_size=1)
+        else:
+            predict = modelC0.predict(X[index].reshape(1, 28, 28, 1), batch_size=1)
+        if (np.argmax(predict) == np.argmax(y[index])):
+            correct += 1
+        index += 1
+    return correct / len(X)
 
-# def flip_images(X, y):
-#     datagen = ImageDataGenerator(
-#         horizontal_flip=True,
-#         vertical_flip=True,
-#     )
-#     datagen.fit(X)
-#     data_it = datagen.flow(X, y, batch_size=1)
-    
-#     data_list = []
-#     y_list = []
-#     batch_index = 0
-#     while batch_index <= data_it.batch_index:
-#         data = data_it.next()
-#         #x_data = data[0].reshape((784,))
-#         data_list.append(data[0])
-#         y_list.append(data[1])
-#         batch_index = batch_index + 1
-
-#     data_array = np.asarray(data_list)
-#     data_array = data_array.reshape(-1, 28, 28, 1)
-#     y_array = np.asarray(y_list)
-#     return (data_array, y_array)
+#  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 # settings
 totalDataSize = 60000
@@ -92,6 +92,7 @@ accArray_E = []
 lossArray = []
 accArray = []
 indices = []
+accChainedArray = []
 
 # get data
 #X_train, y_train = load_data(filepath_train)
@@ -104,8 +105,15 @@ for i in range(nbBaseBatches):
     #y_E = np.zeros(sizeOneBatch)
     #y = to_categorical(y, 10)
 
-    #X, y, y_E = flip_images(X, y, True)
-    X, y, y_E = appear(X, y, True)
+    if drift_type == "flip":
+        X, y, y_E = flip_images(X, y, False)
+    elif drift_type == "appear":
+        X, y, y_E = appear(X, y, True)
+    elif drift_type == "remap":
+        X, y, y_E = remap(X, y, True)
+    elif (drift_type == "rotate"):
+        X, y, y_E = rot(X, y, 0)
+
     print(X.shape)
     print(len(X))
 
@@ -117,8 +125,11 @@ for i in range(nbBaseBatches):
     lossArray_E.append(np.mean(result_E.history["loss"]))
     accArray_E.append(np.mean(result_E.history["acc"]))
     indices.append(i)
+    accChained = calc_accuracy(model, model_Ei, model_Ci, X, y)
+    accChainedArray.append(accChained)
 
 # adaption: data changed
+angle = 0 # for rotate
 for i in range(nbBaseBatches, nbBatches):
     print(i)
     
@@ -127,8 +138,18 @@ for i in range(nbBaseBatches, nbBatches):
     # y_E = np.full(sizeOneBatch, 1.0)
     # y = to_categorical(y, 10)
 
-    #X, y, y_E = flip_images(X, y, False)
-    X, y, y_E = appear(X, y, False)
+    if drift_type == "flip":
+        X, y, y_E = flip_images(X, y, i >= nbBatches/2)
+    elif drift_type == "appear":
+        X, y, y_E = appear(X, y, False)
+    elif drift_type == "remap":
+        X, y, y_E = remap(X, y, i < nbBatches/2)
+    elif (drift_type == "rotate"):
+        if i > 50 and i < 90:
+            angle += 6
+        else:
+            angle = 0
+        X, y, y_E = rot(X, y, angle)
 
     # evaluate
     loss_E, acc_E = model_Ei.evaluate(X, y_E, batch_size=50)
@@ -138,41 +159,33 @@ for i in range(nbBaseBatches, nbBatches):
     lossArray.append(loss)
     accArray.append(acc)
     indices.append(i)
+    accChained = calc_accuracy(model, model_Ei, model_Ci, X, y)
+    accChainedArray.append(accChained)
 
     # training
     model_Ei.fit(X, y_E, batch_size=50, epochs=10)
     model_Ci.fit(X, y, batch_size=50, epochs=10)
 
-
-np.savez("mnist_drift_clf_results_weighted.npz", acc=accArray, acc_E=accArray_E, loss=lossArray, loss_E=lossArray_E, indices=indices)
-# plt.plot(indices, lossArray, label="loss")
-# plt.legend()
-# plt.show()
-
-# plt.plot(indices, accArray, label="accuracy")
-# plt.legend()
-# plt.show()
-
-# plt.plot(indices, lossArray_E, label="loss Error Clf")
-# plt.legend()
-# plt.show()
-
-# plt.plot(indices, accArray_E, label="accuracy Error Clf")
-# plt.legend()
-# plt.show()
+npFileName = "mnist_drift_{0}_weighted.npz".format(drift_type)
+np.savez(npFileName, acc=accArray, acc_E=accArray_E, 
+                    loss=lossArray, loss_E=lossArray_E,
+                    accChained=accChainedArray,
+                    indices=indices)
 
 # result of accuracy
 plt.plot(indices, accArray, label="acc patching clf")
 plt.plot(indices, accArray_E, label="acc error clf")
+plt.plot(indices, accChainedArray, label="acc Ei+Ci")
 plt.title("Accuracy")
 plt.ylabel("Accuracy")
 plt.xlabel("Batch")
+plt.legend()
 plt.show()
 
-# result of loss
-plt.plot(indices, lossArray, label="loss patching clf")
-plt.plot(indices, lossArray_E, label="loss error clf")
-plt.title("Loss")
-plt.ylabel("Loss")
-plt.xlabel("Batch")
-plt.show()
+# # result of loss
+# plt.plot(indices, lossArray, label="loss patching clf")
+# plt.plot(indices, lossArray_E, label="loss error clf")
+# plt.title("Loss")
+# plt.ylabel("Loss")
+# plt.xlabel("Batch")
+# plt.show()
