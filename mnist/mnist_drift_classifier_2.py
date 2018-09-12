@@ -1,13 +1,13 @@
 from scipy.io import arff
 import numpy as np
-from keras.models import load_model, Model
-from keras.layers import Input, Dense, Activation, Dropout
+from keras.models import load_model, Model, Sequential
+from keras.layers.convolutional import Conv2D, MaxPooling2D
+from keras.layers import Input, Dense, Activation, Dropout, Flatten
 from keras.utils import to_categorical
 from keras.preprocessing.image import ImageDataGenerator
 from keras import backend as K
 import sys
 import matplotlib.pyplot as plt
-from sklearn.utils import shuffle
 
 from data_provider import *
 
@@ -130,27 +130,12 @@ nbBaseBatches = 20 # size of base dataset
 sizeOneBatch = totalDataSize // nbBatches
 
 # build models using weights from base
-# model = load_model('model_base.h5')
-# digit_input = model.input
-# out_flatten = model.get_layer("Flatten")
-# visual_model = Model(digit_input, out_flatten.output)
+model = load_model('model_base.h5')
 
-# class_input = Input(shape=(28,28,1))
-# out = visual_model(class_input)
-# out = Dense(128, activation="relu")(out)
-# out = Dropout(0.5)(out)
-
-# # error clf
-# out_Ei = Dense(1, activation="sigmoid")(out)
-# model_Ei = Model(class_input, out_Ei)
-# model_Ei.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['accuracy'])
-# # patching clf
-# out_Ci = Dense(10, activation="softmax")(out)
-# model_Ci = Model(class_input, out_Ci)
-# model_Ci.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
-
-model_Ci = make_weighted_model(False)
-model_Ei = make_weighted_model(True)
+# model_Ci = make_weighted_model(False)
+# model_Ei = make_weighted_model(True
+model_Ci = make_model(False)
+model_Ei = make_model(True)
 
 lossArray_E = []
 accArray_E = []
@@ -174,8 +159,10 @@ for i in range(nbBaseBatches):
         X, y, y_E = appear(X, y, True)
     elif drift_type == "remap":
         X, y, y_E = remap(X, y, True)
-    elif (drift_type == "rotate"):
+    elif drift_type == "rotate":
         X, y, y_E = rot(X, y, 0)
+    elif drift_type == "transfer":
+        X, y, y_E = transfer(X, y, True)
 
     print(X.shape)
     print(len(X))
@@ -197,19 +184,25 @@ for i in range(nbBaseBatches, nbBatches):
     print(i)
     
     X_org, y_org = next(gen)
-
+    
+    data_changed = True
     if drift_type == "flip":
         X, y, y_E = flip_images(X_org, y_org, i >= nbBatches/2)
     elif drift_type == "appear":
         X, y, y_E = appear(X_org, y_org, False)
     elif drift_type == "remap":
         X, y, y_E = remap(X_org, y_org, i < nbBatches/2)
+        data_changed = i >= nbBatches/2
     elif (drift_type == "rotate"):
         if i > 50 and i < 85 and angle <= 180:
             angle += 5
         else:
             angle = 0
+            data_changed = False
         X, y, y_E = rot(X_org, y_org, angle)
+    elif drift_type == "transfer":
+        X, y, y_E = transfer(X_org, y_org, i < nbBatches/2)
+        data_changed = i >= nbBatches/2
 
     # evaluate
     loss_E, acc_E = model_Ei.evaluate(X, y_E, batch_size=50)
@@ -223,12 +216,12 @@ for i in range(nbBaseBatches, nbBatches):
     accChainedArray.append(accChained)
 
     # training
-    y_E_org = np.zeros(len(y_E))
-    X_combine = np.concatenate((X_org, X))
-    y_combine = np.concatenate((y_E_org, y_E))
-    X_combine, y_combine = shuffle(X_combine, y_combine)
-    model_Ei.fit(X_combine, y_combine, batch_size=50, epochs=10)
-    #model_Ei.fit(X, y_E, batch_size=50, epochs=10)
+    if data_changed: # combine original data and changed data and shuffle them to get better result
+        X_combine, y_combine = combine_Ei_training_data(drift_type, X_org, y_org, X, y_E)
+        model_Ei.fit(X_combine, y_combine, batch_size=50, epochs=10)
+    else:
+        model_Ei.fit(X, y_E, batch_size=50, epochs=10)
+    
     model_Ci.fit(X, y, batch_size=50, epochs=10)
 
 npFileName = "mnist_drift_{0}_weighted.npz".format(drift_type)
