@@ -71,17 +71,19 @@ def make_model(Ei):
 
     model = Sequential()
     model.add(Conv2D(nb_filters, (nb_conv, nb_conv),
+                    name="layer1",
                     padding='valid',
                     input_shape=(img_rows, img_cols, 1)))
-    model.add(Conv2D(nb_filters, (nb_conv, nb_conv), padding='valid'))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(nb_pool, nb_pool)))
+    model.add(Conv2D(nb_filters, (nb_conv, nb_conv), padding='valid', name="layer2"))
+    model.add(Activation('relu', name="layer3"))
+    model.add(MaxPooling2D(name="layer4", pool_size=(nb_pool, nb_pool)))
 
-    model.add(Conv2D(nb_filters * 2, (nb_conv, nb_conv), padding='valid'))
-    model.add(Conv2D(nb_filters * 2, (nb_conv, nb_conv), padding='valid'))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(nb_pool, nb_pool)))
-    model.add(Dropout(0.25))
+    model.add(Conv2D(nb_filters * 2, (nb_conv, nb_conv), padding='valid', name="layer5"))
+    model.add(Conv2D(nb_filters * 2, (nb_conv, nb_conv), padding='valid', name="layer6"))
+    model.add(Activation('relu', name="layer7"))
+    model.add(MaxPooling2D(pool_size=(nb_pool, nb_pool), name="layer8"))
+    model.add(Dropout(0.25, name="layer9"))
+
 
     model.add(Flatten(name="Flatten"))
     model.add(Dense(128))
@@ -132,10 +134,12 @@ sizeOneBatch = totalDataSize // nbBatches
 # build models using weights from base
 model = load_model('model_base.h5')
 
-# model_Ci = make_weighted_model(False)
-# model_Ei = make_weighted_model(True
+#model_Ci = make_weighted_model(False)
+#model_Ei = make_weighted_model(True)
 model_Ci = make_model(False)
+model_Ci.load_weights("model_base_weights.h5", by_name=True)
 model_Ei = make_model(True)
+model_Ei.load_weights("model_base_weights.h5", by_name=True)
 
 lossArray_E = []
 accArray_E = []

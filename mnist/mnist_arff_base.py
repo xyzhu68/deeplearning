@@ -25,17 +25,18 @@ batch_size = 50
 
 model = Sequential()
 model.add(Conv2D(nb_filters, (nb_conv, nb_conv),
+                 name="layer1",
                  padding='valid',
                  input_shape=(img_rows, img_cols, 1)))
-model.add(Conv2D(nb_filters, (nb_conv, nb_conv), padding='valid'))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(nb_pool, nb_pool)))
+model.add(Conv2D(nb_filters, (nb_conv, nb_conv), padding='valid', name="layer2"))
+model.add(Activation('relu', name="layer3"))
+model.add(MaxPooling2D(name="layer4", pool_size=(nb_pool, nb_pool)))
 
-model.add(Conv2D(nb_filters * 2, (nb_conv, nb_conv), padding='valid'))
-model.add(Conv2D(nb_filters * 2, (nb_conv, nb_conv), padding='valid'))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(nb_pool, nb_pool)))
-model.add(Dropout(0.25))
+model.add(Conv2D(nb_filters * 2, (nb_conv, nb_conv), padding='valid', name="layer5"))
+model.add(Conv2D(nb_filters * 2, (nb_conv, nb_conv), padding='valid', name="layer6"))
+model.add(Activation('relu', name="layer7"))
+model.add(MaxPooling2D(pool_size=(nb_pool, nb_pool), name="layer8"))
+model.add(Dropout(0.25, name="layer9"))
 
 model.add(Flatten(name="Flatten"))
 model.add(Dense(128))
@@ -67,5 +68,6 @@ y_test = to_categorical(y_test, 10)
 #model.fit(X_50K, y_50K, batch_size=100, epochs=20)
 model.fit(X_train, y_train, validation_data=(X_test, y_test), batch_size=100, epochs=20)
 model.save("model_base.h5")
+model.save_weights("model_base_weights.h5")
 
 K.clear_session()                    
