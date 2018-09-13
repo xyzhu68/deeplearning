@@ -8,6 +8,7 @@ from keras.preprocessing.image import ImageDataGenerator
 import sys
 from vfdt import *
 from sklearn.metrics import accuracy_score
+from sklearn.utils import shuffle
 
 filepath_train = Path("../mnist/train.arff")
 filepath_test = Path("../mnist/test.arff")
@@ -84,6 +85,7 @@ for i in range(nbBaseBatches):
     X_gen, y_gen = next(gen)
     X_gen = X_gen.reshape(-1, 784)
     y_gen_E = np.zeros(sizeOneBatch)
+    
     for X, y in zip(X_gen, y_gen_E):
         tree_e.update(X, y)
     for X, y in zip(X_gen, y_gen):
@@ -105,11 +107,19 @@ for i in range(nbBaseBatches):
 for i in range(nbBaseBatches, nbBatches):
     print(i)
 
-    X_gen, y_gen = next(gen)
-    X_gen, y_gen = flip_images(X_gen, y_gen)
-    y_gen = y_gen.reshape(-1,)
+    X_gen_org, y_gen_org = next(gen)
+    X_gen = None
+    y_gen = None
+    doFlip = i >= nbBatches / 2
+    if doFlip:
+        X_gen, y_gen = flip_images(X_gen_org, y_gen_org)
+        y_gen = y_gen.reshape(-1,)
+        y_gen_E = np.full(len(y_gen), 1.0)
+    else:
+        X_gen = X_gen_org.reshape(-1, 784)
+        y_gen = y_gen_org
+        y_gen_E = np.zeros(len(y_gen_org))
     # evaluate
-    y_gen_E = np.full(sizeOneBatch, 1.0)
     predict_E = tree_e.predict(X_gen)
     acc_E = accuracy_score(predict_E, y_gen_E)
     print(acc_E)
@@ -121,10 +131,20 @@ for i in range(nbBaseBatches, nbBatches):
     indices.append(i)
 
     # training
-    for X, y in zip(X_gen, y_gen_E):
-        tree_e.update(X, y)
     for X, y in zip(X_gen, y_gen):
         tree_p.update(X, y)
 
-np.savez("mnist_horffding.npz", acc=accArray, acc_E=accArray_E, indices=indices)
+    if doFlip:
+        X_combine = np.concatenate((X_gen_org.reshape(-1, 784), X_gen))
+        y_E_org = np.zeros(len(X_gen))
+        y_combine = np.concatenate((y_E_org, y_gen_E))
+        X_shuffled, y_shuffled = shuffle(X_combine, y_combine)
+        for X, y in zip(X_shuffled, y_shuffled):
+            tree_e.update(X, y)
+    else:
+        for X, y in zip(X_gen, y_gen_E):
+            tree_e.update(X, y)
+
+
+np.savez("mnist_hoeffding.npz", acc=accArray, acc_E=accArray_E, indices=indices)
 # https://github.com/doubleplusplus/incremental-decision-tree-CART-python/blob/master/vfdt.py
