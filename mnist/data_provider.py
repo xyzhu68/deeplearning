@@ -3,9 +3,29 @@ import numpy as np
 from keras.preprocessing.image import ImageDataGenerator
 from scipy.ndimage import rotate
 from sklearn.utils import shuffle
+import random
 import matplotlib.pyplot as plt # DEBUG
 
 def flip_images(X, y, doFlip):
+    if not doFlip:
+        y = to_categorical(y, 10)
+        y_E = np.zeros(len(y))
+        return (X, y, y_E)
+
+    X = X.reshape(-1, 28, 28)
+    x_array = []
+    for image in X:
+        axis = bool(random.getrandbits(1))
+        flipped = np.flip(image, axis)
+        x_array.append(flipped)
+    x_array = np.asarray(x_array)
+    X = x_array.reshape(-1, 28, 28, 1)
+    y_E = np.full(len(y), 1.0)
+    y = to_categorical(y, 10)
+    
+    return (X, y, y_E)
+
+def flip_images2(X, y, doFlip):
     if not doFlip:
         y = to_categorical(y, 10)
         y_E = np.zeros(len(y))
@@ -115,16 +135,19 @@ def transfer(X, y, firstHalf):
     size = len(X)
     x_array = []
     y_array = []
+    y_array_E = None
     for i in range(size):
         yValue = y[i]
         if firstHalf:
             if yValue < 5:
                 x_array.append(X[i])
                 y_array.append(yValue)
+            #y_array_E = np.zeros(len(y_array))
         else:
             if yValue >= 5:
                 x_array.append(X[i])
                 y_array.append(yValue)
+            #y_array_E = np.full(len(y_array), 1.0)
         
 
     y_array_E = np.zeros(len(y_array)) if firstHalf else np.full(len(y_array), 1.0)

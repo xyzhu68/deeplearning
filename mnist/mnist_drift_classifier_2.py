@@ -61,6 +61,11 @@ def calc_accuracy(modelC0, modelEi, modelCi, X, y):
         index += 1
     return correct / len(X)
 
+def calc_acc_for_E_model(model, X, y):
+    predict = model.predict(X)
+    predict = predict.reshape(len(predict),)
+    return np.mean(predict)
+
 # model from scratch
 def make_model(Ei):
     nb_filters = 64
@@ -92,11 +97,11 @@ def make_model(Ei):
     if Ei:
         model.add(Dense(1))
         model.add(Activation('sigmoid'))
-        model.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+        model.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['binary_accuracy'])
     else:
         model.add(Dense(10))
         model.add(Activation('softmax'))
-        model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+        model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['categorical_accuracy'])
     
 
     return model
@@ -115,12 +120,12 @@ def make_weighted_model(Ei):
     if Ei: # error clf
         out_Ei = Dense(1, activation="sigmoid")(out)
         model_Ei = Model(class_input, out_Ei)
-        model_Ei.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+        model_Ei.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['binary_accuracy'])
         return model_Ei
     else: # patching clf
         out_Ci = Dense(10, activation="softmax")(out)
         model_Ci = Model(class_input, out_Ci)
-        model_Ci.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+        model_Ci.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['categorical_accuracy'])
         return model_Ci
 
 #  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -137,9 +142,9 @@ model = load_model('model_base.h5')
 #model_Ci = make_weighted_model(False)
 #model_Ei = make_weighted_model(True)
 model_Ci = make_model(False)
-model_Ci.load_weights("model_base_weights.h5", by_name=True)
+#model_Ci.load_weights("model_base_weights.h5", by_name=True)
 model_Ei = make_model(True)
-model_Ei.load_weights("model_base_weights.h5", by_name=True)
+#model_Ei.load_weights("model_base_weights.h5", by_name=True)
 
 lossArray_E = []
 accArray_E = []
@@ -167,6 +172,9 @@ for i in range(nbBaseBatches):
         X, y, y_E = rot(X, y, 0)
     elif drift_type == "transfer":
         X, y, y_E = transfer(X, y, True)
+    else:
+        print(drift_type + " is unknown")
+        exit()
 
     print(X.shape)
     print(len(X))
@@ -175,9 +183,9 @@ for i in range(nbBaseBatches):
     result_C = model_Ci.fit(X, y, batch_size=50, epochs=10)
 
     lossArray.append(np.mean(result_C.history["loss"]))
-    accArray.append(np.mean(result_C.history["acc"]))
+    accArray.append(np.mean(result_C.history["categorical_accuracy"]))
     lossArray_E.append(np.mean(result_E.history["loss"]))
-    accArray_E.append(np.mean(result_E.history["acc"]))
+    accArray_E.append(np.mean(result_E.history["binary_accuracy"]))
     indices.append(i)
     accChained = calc_accuracy(model, model_Ei, model_Ci, X, y)
     accChainedArray.append(accChained)
@@ -190,8 +198,12 @@ for i in range(nbBaseBatches, nbBatches):
     X_org, y_org = next(gen)
     
     data_changed = True
+    X = None
+    y = None
+    y_E = None
     if drift_type == "flip":
         X, y, y_E = flip_images(X_org, y_org, i >= nbBatches/2)
+        data_changed = i >= nbBatches/2
     elif drift_type == "appear":
         X, y, y_E = appear(X_org, y_org, False)
     elif drift_type == "remap":
@@ -210,6 +222,9 @@ for i in range(nbBaseBatches, nbBatches):
 
     # evaluate
     loss_E, acc_E = model_Ei.evaluate(X, y_E, batch_size=50)
+    acc_E = calc_acc_for_E_model(model_Ei, X, y_E)
+    if not data_changed:
+        acc_E = 1.0 - acc_E
     lossArray_E.append(loss_E)
     accArray_E.append(acc_E)
     loss, acc = model_Ci.evaluate(X, y, batch_size=50)
@@ -228,7 +243,7 @@ for i in range(nbBaseBatches, nbBatches):
     
     model_Ci.fit(X, y, batch_size=50, epochs=10)
 
-npFileName = "mnist_drift_{0}_weighted.npz".format(drift_type)
+npFileName = "mnist_drift_{0}_from_scratch_64.npz".format(drift_type)
 np.savez(npFileName, acc=accArray, acc_E=accArray_E, 
                     loss=lossArray, loss_E=lossArray_E,
                     accChained=accChainedArray,
