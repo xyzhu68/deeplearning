@@ -64,6 +64,7 @@ def calc_accuracy(modelC0, modelEi, modelCi, X, y):
 def calc_acc_for_E_model(model, X, y):
     predict = model.predict(X)
     predict = predict.reshape(len(predict),)
+    print("predict: {0}".format(np.mean(predict)))
     return np.mean(predict)
 
 # model from scratch
@@ -106,27 +107,27 @@ def make_model(Ei):
 
     return model
 
-def make_weighted_model(Ei):
-    model = load_model('model_base.h5')
-    digit_input = model.input
-    out_flatten = model.get_layer("Flatten")
-    visual_model = Model(digit_input, out_flatten.output)
+# def make_weighted_model(Ei):
+#     model = load_model('model_base.h5')
+#     digit_input = model.input
+#     out_flatten = model.get_layer("Flatten")
+#     visual_model = Model(digit_input, out_flatten.output)
 
-    class_input = Input(shape=(28,28,1))
-    out = visual_model(class_input)
-    out = Dense(128, activation="relu")(out)
-    out = Dropout(0.5)(out)
+#     class_input = Input(shape=(28,28,1))
+#     out = visual_model(class_input)
+#     out = Dense(128, activation="relu")(out)
+#     out = Dropout(0.5)(out)
 
-    if Ei: # error clf
-        out_Ei = Dense(1, activation="sigmoid")(out)
-        model_Ei = Model(class_input, out_Ei)
-        model_Ei.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['binary_accuracy'])
-        return model_Ei
-    else: # patching clf
-        out_Ci = Dense(10, activation="softmax")(out)
-        model_Ci = Model(class_input, out_Ci)
-        model_Ci.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['categorical_accuracy'])
-        return model_Ci
+#     if Ei: # error clf
+#         out_Ei = Dense(1, activation="sigmoid")(out)
+#         model_Ei = Model(class_input, out_Ei)
+#         model_Ei.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['categorical_accuracy'])
+#         return model_Ei
+#     else: # patching clf
+#         out_Ci = Dense(10, activation="softmax")(out)
+#         model_Ci = Model(class_input, out_Ci)
+#         model_Ci.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['categorical_accuracy'])
+#         return model_Ci
 
 #  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -222,6 +223,8 @@ for i in range(nbBaseBatches, nbBatches):
 
     # evaluate
     loss_E, acc_E = model_Ei.evaluate(X, y_E, batch_size=50)
+    print("acc_E: {0}".format(acc_E))
+    #print("y_E shape: {0}, X shape: {1}".format(y_E.shape, X.shape))
     acc_E = calc_acc_for_E_model(model_Ei, X, y_E)
     if not data_changed:
         acc_E = 1.0 - acc_E

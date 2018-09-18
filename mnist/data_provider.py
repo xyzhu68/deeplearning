@@ -132,25 +132,24 @@ def rot(X,y, angle):
         return (X_result, y, y_E)
 
 def transfer(X, y, firstHalf):
-    size = len(X)
     x_array = []
     y_array = []
-    y_array_E = None
-    for i in range(size):
+    y_array_E = []
+    for i in range(len(X)):
         yValue = y[i]
         if firstHalf:
             if yValue < 5:
                 x_array.append(X[i])
                 y_array.append(yValue)
-            #y_array_E = np.zeros(len(y_array))
+                y_array_E.append(0)
         else:
             if yValue >= 5:
                 x_array.append(X[i])
                 y_array.append(yValue)
-            #y_array_E = np.full(len(y_array), 1.0)
+                y_array_E.append(1)
         
 
-    y_array_E = np.zeros(len(y_array)) if firstHalf else np.full(len(y_array), 1.0)
+    #y_array_E = np.zeros(len(y_array)) if firstHalf else np.full(len(y_array), 1)
     y_array = to_categorical(y_array, 10)
     x_array = np.asarray(x_array)
     x_array = x_array.reshape(-1, 28, 28, 1)
