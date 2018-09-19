@@ -8,8 +8,10 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras import backend as K
 import sys
 import matplotlib.pyplot as plt
+from keras.activations import relu, softmax, sigmoid
 
 from data_provider import *
+from model_provider import *
 
 # settings for GPU
 import tensorflow as tf
@@ -26,6 +28,10 @@ if nbArgs < 2:
     print("Please define drift type")
     exit()
 drift_type = sys.argv[1]
+
+resnet = False
+if nbArgs > 2:
+    resnet =  sys.argv[2] == "resnet"
 
 # Functions +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def load_data(dataPath):
@@ -60,12 +66,6 @@ def calc_accuracy(modelC0, modelEi, modelCi, X, y):
             correct += 1
         index += 1
     return correct / len(X)
-
-def calc_acc_for_E_model(model, X, y):
-    predict = model.predict(X)
-    predict = predict.reshape(len(predict),)
-    print("predict: {0}".format(np.mean(predict)))
-    return np.mean(predict)
 
 # model from scratch
 def make_model(Ei):
@@ -107,6 +107,25 @@ def make_model(Ei):
 
     return model
 
+def make_resnet_model(Ei, n):
+    print("resnet used")
+    model_resnet = make_resnet()
+    model_resnet.load_weights("model_base_resnet_weights.h5")
+    input = Input(shape=(28,28,1))
+    out = model_resnet(input)
+    if Ei:
+        out = Dense(units=1, kernel_regularizer=regularizers.l2(0.01))(out)
+        out = Activation(sigmoid)(out)
+    else:
+        out = Dense(units=10, kernel_regularizer=regularizers.l2(0.01))(out)
+        out = Activation(softmax)(out)
+    model = Model(inputs=input, outputs=out)
+    lossfunc = "binary_crossentropy" if Ei else "categorical_crossentropy"
+    met = "binary_accuracy" if Ei else "categorical_accuracy"
+    model.compile(loss=lossfunc, optimizer='adam', metrics=[met])
+    
+    return model
+
 # def make_weighted_model(Ei):
 #     model = load_model('model_base.h5')
 #     digit_input = model.input
@@ -138,13 +157,11 @@ nbBaseBatches = 20 # size of base dataset
 sizeOneBatch = totalDataSize // nbBatches
 
 # build models using weights from base
-model = load_model('model_base.h5')
+model = load_model("model_base_resnet.h5") if resnet else load_model('model_base.h5')
 
-#model_Ci = make_weighted_model(False)
-#model_Ei = make_weighted_model(True)
-model_Ci = make_model(False)
+model_Ci = make_resnet_model(False, 0) if resnet else make_model(False)
 #model_Ci.load_weights("model_base_weights.h5", by_name=True)
-model_Ei = make_model(True)
+model_Ei = make_resnet_model(True, 0) if resnet else make_model(True)
 #model_Ei.load_weights("model_base_weights.h5", by_name=True)
 
 lossArray_E = []
@@ -221,13 +238,17 @@ for i in range(nbBaseBatches, nbBatches):
         X, y, y_E = transfer(X_org, y_org, i < nbBatches/2)
         data_changed = i >= nbBatches/2
 
+    X_combine = None
+    y_combine = None
+    if data_changed: # for Ei: combine original data and changed data and shuffle them to get better result
+        X_combine, y_combine = combine_Ei_training_data(drift_type, X_org, y_org, X, y_E)
+    else:
+        X_combine = X
+        y_combine = y_E
+        
     # evaluate
-    loss_E, acc_E = model_Ei.evaluate(X, y_E, batch_size=50)
-    print("acc_E: {0}".format(acc_E))
-    #print("y_E shape: {0}, X shape: {1}".format(y_E.shape, X.shape))
-    acc_E = calc_acc_for_E_model(model_Ei, X, y_E)
-    if not data_changed:
-        acc_E = 1.0 - acc_E
+    loss_E, acc_E = model_Ei.evaluate(X_combine, y_combine, batch_size=50)
+    print("acc_E: {0}, loss: {1}".format(acc_E, loss_E))
     lossArray_E.append(loss_E)
     accArray_E.append(acc_E)
     loss, acc = model_Ci.evaluate(X, y, batch_size=50)
@@ -238,15 +259,17 @@ for i in range(nbBaseBatches, nbBatches):
     accChainedArray.append(accChained)
 
     # training
-    if data_changed: # combine original data and changed data and shuffle them to get better result
-        X_combine, y_combine = combine_Ei_training_data(drift_type, X_org, y_org, X, y_E)
-        model_Ei.fit(X_combine, y_combine, batch_size=50, epochs=10)
-    else:
-        model_Ei.fit(X, y_E, batch_size=50, epochs=10)
-    
+    # if data_changed: # combine original data and changed data and shuffle them to get better result
+    #     X_combine, y_combine = combine_Ei_training_data(drift_type, X_org, y_org, X, y_E)
+    #     model_Ei.fit(X_combine, y_combine, batch_size=50, epochs=10)
+    # else:
+    #     model_Ei.fit(X, y_E, batch_size=50, epochs=10)
+    model_Ei.fit(X_combine, y_combine, batch_size=50, epochs=10)
     model_Ci.fit(X, y, batch_size=50, epochs=10)
 
 npFileName = "mnist_drift_{0}_from_scratch_64.npz".format(drift_type)
+if resnet:
+    npFileName = "mnist_drift_{0}_resnet.npz".format(drift_type)
 np.savez(npFileName, acc=accArray, acc_E=accArray_E, 
                     loss=lossArray, loss_E=lossArray_E,
                     accChained=accChainedArray,

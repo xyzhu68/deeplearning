@@ -25,35 +25,35 @@ def flip_images(X, y, doFlip):
     
     return (X, y, y_E)
 
-def flip_images2(X, y, doFlip):
-    if not doFlip:
-        y = to_categorical(y, 10)
-        y_E = np.zeros(len(y))
-        return (X, y, y_E)
+# def flip_images2(X, y, doFlip):
+#     if not doFlip:
+#         y = to_categorical(y, 10)
+#         y_E = np.zeros(len(y))
+#         return (X, y, y_E)
 
-    datagen = ImageDataGenerator(
-        horizontal_flip=True,
-        vertical_flip=True,
-    )
-    datagen.fit(X)
-    data_it = datagen.flow(X, y, batch_size=1)
+#     datagen = ImageDataGenerator(
+#         horizontal_flip=True,
+#         vertical_flip=True,
+#     )
+#     datagen.fit(X)
+#     data_it = datagen.flow(X, y, batch_size=1)
     
-    data_list = []
-    y_list = []
-    batch_index = 0
-    while batch_index <= data_it.batch_index:
-        data = data_it.next()
-        data_list.append(data[0])
-        y_list.append(data[1])
-        batch_index = batch_index + 1
+#     data_list = []
+#     y_list = []
+#     batch_index = 0
+#     while batch_index <= data_it.batch_index:
+#         data = data_it.next()
+#         data_list.append(data[0])
+#         y_list.append(data[1])
+#         batch_index = batch_index + 1
 
-    data_array = np.asarray(data_list)
-    data_array = data_array.reshape(-1, 28, 28, 1)
-    y_array = np.asarray(y_list)
+#     data_array = np.asarray(data_list)
+#     data_array = data_array.reshape(-1, 28, 28, 1)
+#     y_array = np.asarray(y_list)
 
-    y_array_E = np.full(len(data_array), 1.0)
-    y_array = to_categorical(y_array, 10)
-    return (data_array, y_array, y_array_E)
+#     y_array_E = np.full(len(data_array), 1.0)
+#     y_array = to_categorical(y_array, 10)
+#     return (data_array, y_array, y_array_E)
 
 def appear(X, y, isBase):
     if isBase:
