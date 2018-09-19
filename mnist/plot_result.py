@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
 
-
+"""
 data = np.load("mnist_drift_clf_results.npz")
 
 indices = data["indices"]
@@ -30,7 +30,7 @@ plt.legend()
 plt.show()
 """
 
-data = np.load(Path("../DecisionTree/mnist_horffding.npz"))
+data = np.load(Path("../DecisionTree/mnist_hoeffding.npz"))
 
 indices = data["indices"]
 accArray = data["acc"]
@@ -46,4 +46,3 @@ plt.xlabel("Batch")
 plt.legend()
 plt.show()
 
-"""

@@ -7,6 +7,7 @@ from keras.layers import Input, Dense, Dropout, Activation, Flatten
 from keras.layers.convolutional import Conv2D, MaxPooling2D
 from keras.callbacks import ModelCheckpoint
 from keras import backend as K
+from keras.activations import relu, softmax
 
 
 from model_provider import *
@@ -29,9 +30,19 @@ batch_size = 100
 nb_classes = 10
 
 # Model
-model = make_resnet()
-#model.summary()
-#exit()
+model_resnet = make_resnet()
+input = Input(shape=(28,28,1))
+out = model_resnet(input)
+out = Flatten()(out)
+out = Dense(units=128)(out)
+out = Activation(relu)(out)
+out = Dense(units=10, kernel_regularizer=regularizers.l2(0.01))(out)
+out = Activation(softmax)(out)
+model = Model(inputs=input, outputs=out)
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+# model_resnet.summary()
+# model.summary()
+# exit()
 
 # read data
 data, meta = arff.loadarff(filepath_train)
@@ -51,6 +62,6 @@ y_test = to_categorical(y_test, 10)
 #model.fit(X_50K, y_50K, batch_size=100, epochs=20)
 model.fit(X_train, y_train, validation_data=(X_test, y_test), batch_size=batch_size, epochs=20)
 model.save("model_base_resnet.h5")
-model.save_weights("model_base_resnet_weights.h5")
+model_resnet.save_weights("model_base_resnet_weights.h5")
 
 K.clear_session()                    

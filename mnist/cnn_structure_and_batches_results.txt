@@ -12,3 +12,6 @@ Structure 3: Conv2D-Conv2D-Relu-Maxpooling + Conv2D-Conv2D-Relu-Maxpooling, filt
     base: loss: 0.0112 - acc: 0.9962 - val_loss: 0.0290 - val_acc: 0.9939, 840s
     Ci: loss: 0.0725 - acc: 0.9778 - val_loss: 0.1099 - val_acc: 0.9732, 800s
     Ei: loss: 0.3458 - acc: 0.8573 - val_loss: 0.3650 - val_acc: 0.8438, 1600s
+
+
+tiny resnet:  loss: 0.0219 - acc: 0.9963 - val_loss: 0.0690 - val_acc: 0.9856, ~ 320*20

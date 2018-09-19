@@ -57,16 +57,16 @@ def make_resnet():
     # F_3
     # H_3 is the function from the tensor of size 28x28x16 to the the tensor of size 28x28x32
     # and we can't add together tensors of inconsistent sizes, so we use upscale=True
-    # x = block(32, upscale=True)(x)       # !!! <------- Uncomment for local evaluation
+    x = block(32, upscale=True)(x)       # !!! <------- Uncomment for local evaluation
     # F_4
-    # x = block(32)(x)                     # !!! <------- Uncomment for local evaluation
+    x = block(32)(x)                     # !!! <------- Uncomment for local evaluation
     # F_5
-    # x = block(32)(x)                     # !!! <------- Uncomment for local evaluation
+    x = block(32)(x)                     # !!! <------- Uncomment for local evaluation
 
     # F_6
-    # x = block(48, upscale=True)(x)       # !!! <------- Uncomment for local evaluation
+    x = block(48, upscale=True)(x)       # !!! <------- Uncomment for local evaluation
     # F_7   
-    # x = block(48)(x)                     # !!! <------- Uncomment for local evaluation
+    x = block(48)(x)                     # !!! <------- Uncomment for local evaluation
 
     # last activation of the entire network's output
     x = BatchNormalization()(x)
@@ -74,16 +74,16 @@ def make_resnet():
 
     # average pooling across the channels
     # 28x28x48 -> 1x48
-    x = GlobalAveragePooling2D()(x)
+    # x = GlobalAveragePooling2D()(x)
 
     # dropout for more robust learning
     x = Dropout(0.2)(x)
 
-    # last softmax layer
-    x = Dense(units=10, kernel_regularizer=regularizers.l2(0.01))(x)
-    x = Activation(softmax)(x)
+    # # last softmax layer
+    # x = Dense(units=10, kernel_regularizer=regularizers.l2(0.01))(x)
+    # x = Activation(softmax)(x)
 
-    model = Model(inputs=input_tensor, outputs=x)
-    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    # model = Model(inputs=input_tensor, outputs=x)
+    # model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-    return model
+    return Model(inputs=input_tensor, outputs=x)

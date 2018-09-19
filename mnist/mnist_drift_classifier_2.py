@@ -113,6 +113,7 @@ def make_resnet_model(Ei, n):
     model_resnet.load_weights("model_base_resnet_weights.h5")
     input = Input(shape=(28,28,1))
     out = model_resnet(input)
+    out = Flatten()(out)
     if Ei:
         out = Dense(units=1, kernel_regularizer=regularizers.l2(0.01))(out)
         out = Activation(sigmoid)(out)
