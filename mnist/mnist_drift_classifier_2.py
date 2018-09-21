@@ -111,9 +111,23 @@ def make_resnet_model(Ei, n):
     print("resnet used")
     model_resnet = make_resnet()
     model_resnet.load_weights("model_base_resnet_weights.h5")
+    
+    count_add = 0
+    for l in model_resnet.layers:
+        if l.name.startswith("add"):
+            count_add += 1
+        if count_add < n and not l.name.startswith("input_"):
+            l.trainable = False
+            print("Frozen layer {0}".format(l.name))
+        else:
+            print("Free layer {0}".format(l.name))
+                
+    
     input = Input(shape=(28,28,1))
     out = model_resnet(input)
     out = Flatten()(out)
+    out = Dense(units=128)(out)
+    out = Activation(relu)(out)
     if Ei:
         out = Dense(units=1, kernel_regularizer=regularizers.l2(0.01))(out)
         out = Activation(sigmoid)(out)
@@ -160,10 +174,12 @@ sizeOneBatch = totalDataSize // nbBatches
 # build models using weights from base
 model = load_model("model_base_resnet.h5") if resnet else load_model('model_base.h5')
 
-model_Ci = make_resnet_model(False, 0) if resnet else make_model(False)
+freeze_add_block = 0 
+model_Ci = make_resnet_model(False, freeze_add_block) if resnet else make_model(False)
 #model_Ci.load_weights("model_base_weights.h5", by_name=True)
-model_Ei = make_resnet_model(True, 0) if resnet else make_model(True)
+model_Ei = make_resnet_model(True, freeze_add_block) if resnet else make_model(True)
 #model_Ei.load_weights("model_base_weights.h5", by_name=True)
+
 
 lossArray_E = []
 accArray_E = []
@@ -270,7 +286,7 @@ for i in range(nbBaseBatches, nbBatches):
 
 npFileName = "mnist_drift_{0}_from_scratch_64.npz".format(drift_type)
 if resnet:
-    npFileName = "mnist_drift_{0}_resnet.npz".format(drift_type)
+    npFileName = "mnist_drift_{0}_resnet_{1}.npz".format(drift_type, freeze_add_block)
 np.savez(npFileName, acc=accArray, acc_E=accArray_E, 
                     loss=lossArray, loss_E=lossArray_E,
                     accChained=accChainedArray,
@@ -285,4 +301,11 @@ plt.ylabel("Accuracy")
 plt.xlabel("Batch")
 plt.legend()
 plt.show()
+# pic_file_name = ""
+# if resnet:
+#     pic_file_name = "accuracy_{0}_resnet_{1}.png".format(drift_type, freeze_add_block)
+# else:
+#     pic_file_name = "accuracy_{0}_fs.png".format(drift_type)
+
+# plt.savefig(pic_file_name)
 
