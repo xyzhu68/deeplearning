@@ -46,8 +46,7 @@ plt.show()
 # plt.legend()
 # plt.show()
 
-def get_average_acc(file, acc_key):
-    cp = 20
+def get_average_acc(file, acc_key, cp):
     data = np.load(file)
     accArray = data[acc_key]
     accArray = accArray[cp:]
@@ -58,8 +57,8 @@ def show_attach_result(clf, label):
     #accList2 = []
     for i in range(7):
         fileName = "mnist_drift_appear_resnet_{0}.npz".format(i)
-        accList.append(get_average_acc(fileName, clf))
-        #accList2.append(get_average_acc(fileName, clf2))
+        accList.append(get_average_acc(fileName, clf, 20))
+        #accList2.append(get_average_acc(fileName, clf2, 20))
 
     plt.plot(range(7), accList, label=label)
     #plt.plot(range(7), accList2, label=label2)
@@ -69,5 +68,25 @@ def show_attach_result(clf, label):
     plt.show()
 
 #show_attach_result("acc", "Patching Clf Accuracy")
-show_attach_result("acc_E", "Error Clf Accuracy")
+#show_attach_result("acc_E", "Error Clf Accuracy")
 #show_attach_result("acc", "Patching Clf Accuracy", "acc_E", "Error Clf Accuracy")
+
+def show_flip_result(clf, label, clf2, label2):
+    accList = []
+    accList2 = []
+    filters = [16, 32, 64, 128]
+    for i in range(4):
+        fileName = "mnist_drift_flip_from_scratch_{0}.npz".format(filters[i])
+        accList.append(get_average_acc(fileName, clf, 50))
+        accList2.append(get_average_acc(fileName, clf2, 50))
+
+    plt.plot(filters, accList, label=label)
+    plt.plot(filters, accList2, label=label2)
+    plt.xlabel("filters")
+    plt.ylabel("accuracy")
+    plt.legend()
+    plt.show()
+
+#show_flip_result("acc", "Patching Clf Accuracy")
+#show_flip_result("acc_E", "Error Clf Accuracy")
+show_flip_result("acc", "Patching Clf", "acc_E", "Error Clf")
