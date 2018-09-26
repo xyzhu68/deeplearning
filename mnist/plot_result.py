@@ -9,22 +9,27 @@ def draw_batch_accuracy(dataFile, pngFile):
     indices = data["indices"]
     accArray = data["acc"]
     accArray_E = data["acc_E"]
-    lossArray = data["loss"]
-    lossArray_E = data["loss_E"]
+    accChainedArray = data["accChained"]
+
 
     # result of accuracy
+    fig = plt.figure()
     plt.plot(indices, accArray, label="acc patching clf")
     plt.plot(indices, accArray_E, label="acc error clf")
+    plt.plot(indices, accChainedArray, label="acc Ei+Ci")
     plt.title("Accuracy")
     plt.ylabel("Accuracy")
     plt.xlabel("Batch")
     plt.legend()
     #plt.show()
     plt.savefig(pngFile)
+    plt.close(fig)
 
-data_npz = Path("resnet_flip/mnist_drift_flip_resnet_6.npz")
-png = Path("resnet_flip/accuracy_flip_resnet_6.png")
-draw_batch_accuracy(data_npz, png)
+# for i in range(7):
+#     dataPath = "resnet_{0}/mnist_drift_{0}_resnet_{1}.npz".format("transfer", i)
+#     pngPath = "resnet_{0}/mnist_drift_{0}_resnet_{1}".format("transfer", i)
+#     draw_batch_accuracy(Path(dataPath), pngPath)
+
 
 """
 # result of loss
@@ -59,24 +64,27 @@ def get_average_acc(file, acc_key, cp):
     accArray = accArray[cp:]
     return np.mean(accArray)
 
-def show_attach_result(clf, label):
+def show_attach_result(clf, label, clf2, label2):
     accList = []
-    #accList2 = []
+    accList2 = []
     for i in range(7):
-        fileName = "mnist_drift_appear_resnet_{0}.npz".format(i)
+        fileName = "resnet_{0}/mnist_drift_{0}_resnet_{1}.npz".format("transfer", i)
         accList.append(get_average_acc(fileName, clf, 20))
-        #accList2.append(get_average_acc(fileName, clf2, 20))
+        accList2.append(get_average_acc(fileName, clf2, 20))
 
+    fig = plt.figure()
     plt.plot(range(7), accList, label=label)
-    #plt.plot(range(7), accList2, label=label2)
+    plt.plot(range(7), accList2, label=label2)
     plt.xlabel("frozen layers")
     plt.ylabel("accuracy")
     plt.legend()
-    plt.show()
+    #plt.show()
+    plt.savefig("resnet_{0}/result_Ei_Ci.png".format("transfer"))
+    plt.close(fig)
 
 #show_attach_result("acc", "Patching Clf Accuracy")
 #show_attach_result("acc_E", "Error Clf Accuracy")
-#show_attach_result("acc", "Patching Clf Accuracy", "acc_E", "Error Clf Accuracy")
+show_attach_result("acc", "Patching Clf Accuracy", "acc_E", "Error Clf Accuracy")
 
 def show_flip_result(clf, label, clf2, label2):
     accList = []
