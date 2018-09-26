@@ -2,24 +2,31 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
 
+def draw_batch_accuracy(dataFile, pngFile):
+    #data = np.load(Path("mnist_drift_remap_resnet_3.npz"))
+    data = np.load(dataFile)
+
+    indices = data["indices"]
+    accArray = data["acc"]
+    accArray_E = data["acc_E"]
+    lossArray = data["loss"]
+    lossArray_E = data["loss_E"]
+
+    # result of accuracy
+    plt.plot(indices, accArray, label="acc patching clf")
+    plt.plot(indices, accArray_E, label="acc error clf")
+    plt.title("Accuracy")
+    plt.ylabel("Accuracy")
+    plt.xlabel("Batch")
+    plt.legend()
+    #plt.show()
+    plt.savefig(pngFile)
+
+data_npz = Path("resnet_flip/mnist_drift_flip_resnet_6.npz")
+png = Path("resnet_flip/accuracy_flip_resnet_6.png")
+draw_batch_accuracy(data_npz, png)
+
 """
-data = np.load("mnist_drift_clf_results.npz")
-
-indices = data["indices"]
-accArray = data["acc"]
-accArray_E = data["acc_E"]
-lossArray = data["loss"]
-lossArray_E = data["loss_E"]
-
-# result of accuracy
-plt.plot(indices, accArray, label="acc patching clf")
-plt.plot(indices, accArray_E, label="acc error clf")
-plt.title("Accuracy")
-plt.ylabel("Accuracy")
-plt.xlabel("Batch")
-plt.legend()
-plt.show()
-
 # result of loss
 plt.plot(indices, lossArray, label="loss patching clf")
 plt.plot(indices, lossArray_E, label="loss error clf")
@@ -89,4 +96,4 @@ def show_flip_result(clf, label, clf2, label2):
 
 #show_flip_result("acc", "Patching Clf Accuracy")
 #show_flip_result("acc_E", "Error Clf Accuracy")
-show_flip_result("acc", "Patching Clf", "acc_E", "Error Clf")
+#show_flip_result("acc", "Patching Clf", "acc_E", "Error Clf")

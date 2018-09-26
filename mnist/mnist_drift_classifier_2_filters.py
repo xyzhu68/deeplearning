@@ -9,6 +9,7 @@ from keras import backend as K
 import sys
 import matplotlib.pyplot as plt
 from keras.activations import relu, softmax, sigmoid
+import datetime
 
 from data_provider import *
 from model_provider import *
@@ -168,6 +169,8 @@ def make_resnet_model(Ei, n):
 
 #  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+beginTime = datetime.datetime.now()
+
 # settings
 totalDataSize = 60000
 nbBatches = 100 # devide dataset into 100 batches
@@ -287,13 +290,17 @@ for i in range(nbBaseBatches, nbBatches):
     model_Ei.fit(X_combine, y_combine, batch_size=50, epochs=10)
     model_Ci.fit(X, y, batch_size=50, epochs=10)
 
-npFileName = "mnist_drift_{0}_from_scratch_{1}.npz".format(drift_type, filters)
-if resnet:
-    npFileName = "mnist_drift_{0}_resnet_{1}.npz".format(drift_type, freeze_add_block)
+endTime = datetime.datetime.now()
+print(endTime - beginTime)
+
+npFileName = "mnist_drift_{0}_fs_filters_{1}.npz".format(drift_type, filters)
+# if resnet:
+#     npFileName = "mnist_drift_{0}_resnet_{1}.npz".format(drift_type, freeze_add_block)
 np.savez(npFileName, acc=accArray, acc_E=accArray_E, 
                     loss=lossArray, loss_E=lossArray_E,
                     accChained=accChainedArray,
-                    indices=indices)
+                    indices=indices,
+                    duration=str(endTime - beginTime))
 
 # result of accuracy
 # plt.plot(indices, accArray, label="acc patching clf")

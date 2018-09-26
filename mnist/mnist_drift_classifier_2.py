@@ -9,6 +9,7 @@ from keras import backend as K
 import sys
 import matplotlib.pyplot as plt
 from keras.activations import relu, softmax, sigmoid
+import datetime
 
 from data_provider import *
 from model_provider import *
@@ -32,6 +33,10 @@ drift_type = sys.argv[1]
 resnet = False
 if nbArgs > 2:
     resnet =  sys.argv[2] == "resnet"
+
+freeze_add_block = 0
+if nbArgs > 3:
+    freeze_add_block = int(sys.argv[3])
 
 # Functions +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def load_data(dataPath):
@@ -165,6 +170,8 @@ def make_resnet_model(Ei, n):
 
 #  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+beginTime = datetime.datetime.now()
+
 # settings
 totalDataSize = 60000
 nbBatches = 100 # devide dataset into 100 batches
@@ -173,8 +180,7 @@ sizeOneBatch = totalDataSize // nbBatches
 
 # build models using weights from base
 model = load_model("model_base_resnet.h5") if resnet else load_model('model_base.h5')
-
-freeze_add_block = 0 
+ 
 model_Ci = make_resnet_model(False, freeze_add_block) if resnet else make_model(False)
 #model_Ci.load_weights("model_base_weights.h5", by_name=True)
 model_Ei = make_resnet_model(True, freeze_add_block) if resnet else make_model(True)
@@ -284,23 +290,27 @@ for i in range(nbBaseBatches, nbBatches):
     model_Ei.fit(X_combine, y_combine, batch_size=50, epochs=10)
     model_Ci.fit(X, y, batch_size=50, epochs=10)
 
+endTime = datetime.datetime.now()
+print(endTime - beginTime)
+
 npFileName = "mnist_drift_{0}_from_scratch_64.npz".format(drift_type)
 if resnet:
     npFileName = "mnist_drift_{0}_resnet_{1}.npz".format(drift_type, freeze_add_block)
 np.savez(npFileName, acc=accArray, acc_E=accArray_E, 
                     loss=lossArray, loss_E=lossArray_E,
                     accChained=accChainedArray,
-                    indices=indices)
+                    indices=indices,
+                    duration=str(endTime - beginTime))
 
 # result of accuracy
-plt.plot(indices, accArray, label="acc patching clf")
-plt.plot(indices, accArray_E, label="acc error clf")
-plt.plot(indices, accChainedArray, label="acc Ei+Ci")
-plt.title("Accuracy")
-plt.ylabel("Accuracy")
-plt.xlabel("Batch")
-plt.legend()
-plt.show()
+# plt.plot(indices, accArray, label="acc patching clf")
+# plt.plot(indices, accArray_E, label="acc error clf")
+# plt.plot(indices, accChainedArray, label="acc Ei+Ci")
+# plt.title("Accuracy")
+# plt.ylabel("Accuracy")
+# plt.xlabel("Batch")
+# plt.legend()
+# plt.show()
 # pic_file_name = ""
 # if resnet:
 #     pic_file_name = "accuracy_{0}_resnet_{1}.png".format(drift_type, freeze_add_block)
