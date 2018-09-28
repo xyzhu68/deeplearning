@@ -3,3 +3,4 @@ https://blog.feedly.com/transfer-learning-in-nlp/
 https://arxiv.org/pdf/1703.09039.pdf
 https://github.com/vj-1988/NIST-Digits-using-Keras  nist
 https://github.com/codekansas/keras-resnet resnet
+https://ankivil.com/mnist-database-and-simple-classification-networks/ MLP(full-connected)

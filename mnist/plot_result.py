@@ -84,24 +84,28 @@ def show_attach_result(clf, label, clf2, label2):
 
 #show_attach_result("acc", "Patching Clf Accuracy")
 #show_attach_result("acc_E", "Error Clf Accuracy")
-show_attach_result("acc", "Patching Clf Accuracy", "acc_E", "Error Clf Accuracy")
+#show_attach_result("acc", "Patching Clf Accuracy", "acc_E", "Error Clf Accuracy")
 
 def show_flip_result(clf, label, clf2, label2):
+    drift_type = "appear"
     accList = []
     accList2 = []
     filters = [16, 32, 64, 128]
     for i in range(4):
-        fileName = "mnist_drift_flip_from_scratch_{0}.npz".format(filters[i])
+        fileName = "simple_{0}_filters/mnist_drift_{0}_fs_filters_{1}.npz".format(drift_type, filters[i])
         accList.append(get_average_acc(fileName, clf, 50))
         accList2.append(get_average_acc(fileName, clf2, 50))
+
+    fig = plt.figure()
 
     plt.plot(filters, accList, label=label)
     plt.plot(filters, accList2, label=label2)
     plt.xlabel("filters")
     plt.ylabel("accuracy")
     plt.legend()
-    plt.show()
+    #plt.show()
+    plt.savefig("simple_{0}_filters/result_filters.png".format(drift_type))
 
 #show_flip_result("acc", "Patching Clf Accuracy")
 #show_flip_result("acc_E", "Error Clf Accuracy")
-#show_flip_result("acc", "Patching Clf", "acc_E", "Error Clf")
+show_flip_result("acc", "Patching Clf", "acc_E", "Error Clf")
