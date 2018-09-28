@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
+from datetime import datetime, timedelta
 
 def draw_batch_accuracy(dataFile, pngFile):
     #data = np.load(Path("mnist_drift_remap_resnet_3.npz"))
@@ -96,7 +97,6 @@ def show_flip_result(clf, label, clf2, label2):
         accList.append(get_average_acc(fileName, clf, 50))
         accList2.append(get_average_acc(fileName, clf2, 50))
 
-    fig = plt.figure()
 
     plt.plot(filters, accList, label=label)
     plt.plot(filters, accList2, label=label2)
@@ -108,4 +108,25 @@ def show_flip_result(clf, label, clf2, label2):
 
 #show_flip_result("acc", "Patching Clf Accuracy")
 #show_flip_result("acc_E", "Error Clf Accuracy")
-show_flip_result("acc", "Patching Clf", "acc_E", "Error Clf")
+#show_flip_result("acc", "Patching Clf", "acc_E", "Error Clf")
+
+def draw_runtime():
+    drift_type = "transfer"
+    runtimes = []
+    filters = [16, 32, 64, 128]
+    for i in range(4):
+        fileName = "simple_{0}_filters/mnist_drift_{0}_fs_filters_{1}.npz".format(drift_type, filters[i])
+        data = np.load(fileName)
+        d_str = data["duration"]
+        t = datetime.strptime(str(d_str).split(".")[0],"%H:%M:%S")
+        delta = timedelta(hours=t.hour, minutes=t.minute, seconds=t.second)
+        runtimes.append(delta.total_seconds())
+
+    plt.plot(filters, runtimes, label="Time used")
+    plt.xlabel("filters")
+    plt.ylabel("running time")
+    plt.legend()
+    #plt.show()
+    plt.savefig("simple_{0}_filters/result_filters_runtime.png".format(drift_type))
+
+draw_runtime()
