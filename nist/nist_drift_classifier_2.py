@@ -69,9 +69,9 @@ beginTime = datetime.datetime.now()
 
 # settings
 totalDataSize = 70000
-sizeOneBatch = 20
+sizeOneBatch = 700
 nbBatches = totalDataSize // sizeOneBatch # devide dataset into batches
-nbBaseBatches = 700 # size of base dataset
+nbBaseBatches = nbBatches // 5 # size of base dataset: 20% of total batches
 
 
 # C0
@@ -114,8 +114,8 @@ for i in range(nbBaseBatches):
     print(X.shape)
     print(len(X))
 
-    result_E = model_Ei.fit(X, y_E, batch_size=10, epochs=10)
-    result_C = model_Ci.fit(X, y, batch_size=10, epochs=10)
+    result_E = model_Ei.fit(X, y_E, batch_size=20, epochs=10)
+    result_C = model_Ci.fit(X, y, batch_size=20, epochs=10)
 
     lossArray.append(np.mean(result_C.history["loss"]))
     accArray.append(np.mean(result_C.history["categorical_accuracy"]))
@@ -170,7 +170,7 @@ for i in range(nbBaseBatches, nbBatches):
     print("acc_E: {0}, loss: {1}".format(acc_E, loss_E))
     lossArray_E.append(loss_E)
     accArray_E.append(acc_E)
-    loss, acc = model_Ci.evaluate(X, y, batch_size=10)
+    loss, acc = model_Ci.evaluate(X, y, batch_size=20)
     lossArray.append(loss)
     accArray.append(acc)
     indices.append(i)
@@ -183,8 +183,8 @@ for i in range(nbBaseBatches, nbBatches):
     #     model_Ei.fit(X_combine, y_combine, batch_size=50, epochs=10)
     # else:
     #     model_Ei.fit(X, y_E, batch_size=50, epochs=10)
-    model_Ei.fit(X_combine, y_combine, batch_size=10, epochs=10)
-    model_Ci.fit(X, y, batch_size=10, epochs=10)
+    model_Ei.fit(X_combine, y_combine, batch_size=20, epochs=10)
+    model_Ci.fit(X, y, batch_size=20, epochs=10)
 
 endTime = datetime.datetime.now()
 print(endTime - beginTime)
