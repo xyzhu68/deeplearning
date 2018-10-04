@@ -167,7 +167,7 @@ def combine_Ei_training_data(drift_type, X_org, y_org, X, y_E):
         for i in range(size):
             yValue = y_org[i]
             if yValue < 5:
-                x_array.append(X[i])
+                x_array.append(X_org[i])
         y_E_org = np.zeros(len(x_array))
         x_array = np.asarray(x_array)
         x_array = x_array.reshape(-1, 28, 28, 1)

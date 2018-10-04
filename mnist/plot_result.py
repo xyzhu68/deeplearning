@@ -30,7 +30,7 @@ def draw_batch_accuracy(dataFile, pngFile):
 #     dataPath = "resnet_{0}/mnist_drift_{0}_resnet_{1}.npz".format("transfer", i)
 #     pngPath = "resnet_{0}/mnist_drift_{0}_resnet_{1}".format("transfer", i)
 #     draw_batch_accuracy(Path(dataPath), pngPath)
-
+draw_batch_accuracy(Path("resnet_appear/mnist_drift_appear_resnet_fs.npz"), "resnet_appear/accuracy_appear_resnet_fs.png")
 
 """
 # result of loss
@@ -129,4 +129,4 @@ def draw_runtime():
     #plt.show()
     plt.savefig("simple_{0}_filters/result_filters_runtime.png".format(drift_type))
 
-draw_runtime()
+#draw_runtime()

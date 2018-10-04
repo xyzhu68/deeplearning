@@ -62,6 +62,10 @@ def calc_accuracy(modelC0, modelEi, modelCi, X, y):
     index = 0
     correct = 0
     predict = None
+    tp = 0
+    tn = 0
+    fp = 0
+    fn = 0
     for p in predictEi:
         if p[0] > 0.5:
             predict = modelCi.predict(X[index].reshape(1, 28, 28, 1), batch_size=1)
@@ -69,8 +73,17 @@ def calc_accuracy(modelC0, modelEi, modelCi, X, y):
             predict = modelC0.predict(X[index].reshape(1, 28, 28, 1), batch_size=1)
         if (np.argmax(predict) == np.argmax(y[index])):
             correct += 1
+            if p[0] > 0.5:
+                tp += 1
+            else:
+                tn += 1
+        else:
+            if p[0] > 0.5:
+                fp += 1
+            else:
+                fn += 1
         index += 1
-    return correct / len(X)
+    return correct / len(X), tp, tn, fp, fn
 
 # model from scratch
 def make_model(Ei):
@@ -188,6 +201,10 @@ model_Ei = make_resnet_model(True, freeze_add_block) if resnet else make_model(T
 
 lossArray_E = []
 accArray_E = []
+TP_E = 0
+TN_E = 0
+FP_E = 0
+FN_E = 0
 lossArray = []
 accArray = []
 indices = []
@@ -227,7 +244,7 @@ for i in range(nbBaseBatches):
     lossArray_E.append(np.mean(result_E.history["loss"]))
     accArray_E.append(np.mean(result_E.history["binary_accuracy"]))
     indices.append(i)
-    accChained = calc_accuracy(model, model_Ei, model_Ci, X, y)
+    accChained, _, _, _, _ = calc_accuracy(model, model_Ei, model_Ci, X, y)
     accChainedArray.append(accChained)
 
 # adaption: data changed
@@ -277,12 +294,16 @@ for i in range(nbBaseBatches, nbBatches):
     #lossArray.append(loss)
     #accArray.append(acc)
     indices.append(i)
-    accChained = calc_accuracy(model, model_Ei, model_Ci, X, y)
+    accChained, tp, tn, fp, fn = calc_accuracy(model, model_Ei, model_Ci, X, y)
     accChainedArray.append(accChained)
+    TP_E += tp
+    TN_E += tn
+    FP_E += fp
+    FN_E += fn
 
     # training
     model_Ei.fit(X_combine, y_combine, batch_size=50, epochs=10)
-    model_Ci.fit(X, y, batch_size=50, epochs=10)
+    #model_Ci.fit(X, y, batch_size=50, epochs=10)
 
 endTime = datetime.datetime.now()
 print(endTime - beginTime)
@@ -294,6 +315,10 @@ np.savez(npFileName, acc_E=accArray_E,
                     loss_E=lossArray_E,
                     accChained=accChainedArray,
                     indices=indices,
+                    tp_e=TP_E,
+                    tn_e=TN_E,
+                    fp_e=FP_E,
+                    fn_e=FN_E,
                     duration=str(endTime - beginTime))
 
 # result of accuracy

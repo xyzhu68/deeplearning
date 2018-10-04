@@ -115,7 +115,10 @@ def make_model(Ei):
 def make_resnet_model(Ei, n):
     print("resnet used")
     model_resnet = make_resnet()
-    model_resnet.load_weights("model_base_resnet_weights.h5")
+    if freeze_add_block >= 0:
+        model_resnet.load_weights("model_base_resnet_weights.h5")
+    else:
+        print("from scratch")
     
     count_add = 0
     for l in model_resnet.layers:
@@ -295,7 +298,10 @@ print(endTime - beginTime)
 
 npFileName = "mnist_drift_{0}_from_scratch_64.npz".format(drift_type)
 if resnet:
-    npFileName = "mnist_drift_{0}_resnet_{1}.npz".format(drift_type, freeze_add_block)
+    if freeze_add_block >= 0:
+        npFileName = "mnist_drift_{0}_resnet_{1}.npz".format(drift_type, freeze_add_block)
+    else:
+        npFileName = "mnist_drift_{0}_resnet_fs.npz".format(drift_type)
 np.savez(npFileName, acc=accArray, acc_E=accArray_E, 
                     loss=lossArray, loss_E=lossArray_E,
                     accChained=accChainedArray,
