@@ -75,17 +75,20 @@ nbBaseBatches = nbBatches // 5 # size of base dataset: 20% of total batches
 
 
 # C0
-model = load_model('model_base.h5')
- 
+model = None
 model_Ci = None
 if drift_type == "flip":
+    model = load_model('model_base.h5')
     model_Ci = load_model("model_base_flip.h5")
 elif drift_type == "rotate":
+    model = load_model('model_base.h5')
     model_Ci = load_model("model_base_rotate.h5")
 elif drift_type == "appear":
-    model_Ci = load_model("model_base_A_Z.h5")
-elif drift_type == "remap" or drift_type == "transfer":
+    model = load_model("model_base_A_Z.h5")
     model_Ci = load_model("model_base_0_9.h5")
+elif drift_type == "remap" or drift_type == "transfer":
+    model = load_model("model_base_0_9.h5")
+    model_Ci = load_model("model_base_A_Z.h5")
 
 model_Ei = make_simple_model(True)
 
