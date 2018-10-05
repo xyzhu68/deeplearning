@@ -5,29 +5,24 @@ sess = tf.Session(config=config)
 
 import numpy as np
 from keras.preprocessing.image import ImageDataGenerator
-from keras.models import Sequential, Model
+from keras.models import Sequential, Model, load_model
 from keras.layers import Dropout, Flatten, Dense, Input
 from keras.activations import relu, softmax
 from keras import applications, optimizers
 from keras.utils import to_categorical
 import matplotlib.pyplot as plt
 import os
+import sys
 from keras import backend as K
 from model_provider import *
+from data_provider import *
 
+model = load_model("model_base_0_9.h5")
 
-
-# settings
 img_size = 128
 gen_batch_size = 20
 epochs = 20
 
-# Model
-#model = make_resnet()
-model = make_simple_model(False)
-
-
-# prepare data
 train_data_dir = os.path.abspath("../../by_class_2")
 train_datagen = ImageDataGenerator(rescale=1. / 255)
 train_generator = train_datagen.flow_from_directory(
@@ -39,20 +34,27 @@ train_generator = train_datagen.flow_from_directory(
 
 # X, y = train_generator.next()
 # for i in range(len(X)):
-#     x1 = X[i]
-#     y1 = y[i]
-#     print(y1)
-#     plt.imshow(x1)
+#     print(np.argmax(y[i]))
+#     plt.imshow(X[i].reshape(128, 128))
 #     plt.show()
+
 # exit()
 
+for i in range(10):
+    X, y = train_generator.next()
+    X_used = []
+    y_used = []
+    for j in range(len(X)):
+        yValue = np.argmax(y[j])
+        if yValue < 10:
+            X_used.append(X[j])
+            y_used.append(y[j])
+            
+    X = np.asarray(X_used)
+    X = X.reshape(-1, 128, 128, 1)
+    y = np.asarray(y_used)
+    y = y.reshape(-1, 36)
+    l, a = model.evaluate(X, y, batch_size=10)
+    print(a)
 
-model.fit_generator(
-    train_generator,
-    steps_per_epoch=3500,
-    epochs=epochs)
 
-
-model.save("model_base.h5")
-
-K.clear_session()  

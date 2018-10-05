@@ -77,7 +77,15 @@ nbBaseBatches = nbBatches // 5 # size of base dataset: 20% of total batches
 # C0
 model = load_model('model_base.h5')
  
-model_Ci = make_simple_model(False)
+model_Ci = None
+if drift_type == "flip":
+    model_Ci = load_model("model_base_flip.h5")
+elif drift_type == "rotate":
+    model_Ci = load_model("model_base_rotate.h5")
+elif drift_type == "appear":
+    model_Ci = load_model("model_base_A_Z.h5")
+elif drift_type == "remap" or drift_type == "transfer":
+    model_Ci = load_model("model_base_0_9.h5")
 
 model_Ei = make_simple_model(True)
 
@@ -115,10 +123,10 @@ for i in range(nbBaseBatches):
     print(len(X))
 
     result_E = model_Ei.fit(X, y_E, batch_size=20, epochs=10)
-    result_C = model_Ci.fit(X, y, batch_size=20, epochs=10)
+    # result_C = model_Ci.fit(X, y, batch_size=20, epochs=10)
 
-    lossArray.append(np.mean(result_C.history["loss"]))
-    accArray.append(np.mean(result_C.history["categorical_accuracy"]))
+    # lossArray.append(np.mean(result_C.history["loss"]))
+    # accArray.append(np.mean(result_C.history["categorical_accuracy"]))
     lossArray_E.append(np.mean(result_E.history["loss"]))
     accArray_E.append(np.mean(result_E.history["binary_accuracy"]))
     indices.append(i)
@@ -170,33 +178,28 @@ for i in range(nbBaseBatches, nbBatches):
     print("acc_E: {0}, loss: {1}".format(acc_E, loss_E))
     lossArray_E.append(loss_E)
     accArray_E.append(acc_E)
-    loss, acc = model_Ci.evaluate(X, y, batch_size=20)
-    lossArray.append(loss)
-    accArray.append(acc)
+    # loss, acc = model_Ci.evaluate(X, y, batch_size=20)
+    # lossArray.append(loss)
+    # accArray.append(acc)
     indices.append(i)
     accChained = calc_accuracy(model, model_Ei, model_Ci, X, y)
     accChainedArray.append(accChained)
 
     # training
-    # if data_changed: # combine original data and changed data and shuffle them to get better result
-    #     X_combine, y_combine = combine_Ei_training_data(drift_type, X_org, y_org, X, y_E)
-    #     model_Ei.fit(X_combine, y_combine, batch_size=50, epochs=10)
-    # else:
-    #     model_Ei.fit(X, y_E, batch_size=50, epochs=10)
     model_Ei.fit(X_combine, y_combine, batch_size=20, epochs=10)
-    model_Ci.fit(X, y, batch_size=20, epochs=10)
+    # model_Ci.fit(X, y, batch_size=20, epochs=10)
 
 endTime = datetime.datetime.now()
 print(endTime - beginTime)
 
-npFileName = "mnist_drift_{0}_from_scratch_64.npz".format(drift_type)
+npFileName = "nist_drift_{0}_from_scratch_64.npz".format(drift_type)
 # if resnet:
 #     if freeze_add_block >= 0:
 #         npFileName = "mnist_drift_{0}_resnet_{1}.npz".format(drift_type, freeze_add_block)
 #     else:
 #         npFileName = "mnist_drift_{0}_resnet_fs.npz".format(drift_type)
-np.savez(npFileName, acc=accArray, acc_E=accArray_E, 
-                    loss=lossArray, loss_E=lossArray_E,
+np.savez(npFileName, acc_E=accArray_E, 
+                    loss_E=lossArray_E,
                     accChained=accChainedArray,
                     indices=indices,
                     duration=str(endTime - beginTime))
