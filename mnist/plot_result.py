@@ -8,14 +8,14 @@ def draw_batch_accuracy(dataFile, pngFile):
     data = np.load(dataFile)
 
     indices = data["indices"]
-    accArray = data["acc"]
+    #accArray = data["acc"]
     accArray_E = data["acc_E"]
     accChainedArray = data["accChained"]
 
 
     # result of accuracy
     fig = plt.figure()
-    plt.plot(indices, accArray, label="acc Ci")
+    #plt.plot(indices, accArray, label="acc Ci")
     plt.plot(indices, accArray_E, label="acc Ei")
     plt.plot(indices, accChainedArray, label="acc Ei+Ci")
     plt.title("Accuracy")
@@ -26,11 +26,11 @@ def draw_batch_accuracy(dataFile, pngFile):
     plt.savefig(pngFile)
     plt.close(fig)
 
-# for i in range(7):
-#     dataPath = "resnet_{0}/mnist_drift_{0}_resnet_{1}.npz".format("transfer", i)
-#     pngPath = "resnet_{0}/mnist_drift_{0}_resnet_{1}".format("transfer", i)
-#     draw_batch_accuracy(Path(dataPath), pngPath)
-draw_batch_accuracy(Path("../nist/nist_drift_rotate_from_scratch_64.npz"), "../nist/nist_drift_rotate_from_scratch_64.png")
+for i in range(7):
+    dataPath = "resnet_{0}_2/mnist_drift_{0}_resnet_{1}.npz".format("flip", i)
+    pngPath = "resnet_{0}_2/mnist_drift_{0}_resnet_{1}".format("flip", i)
+    draw_batch_accuracy(Path(dataPath), pngPath)
+#draw_batch_accuracy(Path("resnet_appear_2/mnist_drift_appear_resnet_6.npz"), "resnet_appear_2/mnist_drift_appear_resnet_6.png")
 
 """
 # result of loss
