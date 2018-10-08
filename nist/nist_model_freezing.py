@@ -7,6 +7,7 @@ from keras.layers.convolutional import Conv2D, MaxPooling2D
 from keras.callbacks import ModelCheckpoint
 from keras import backend as K
 import sys
+import os
 from data_provider import *
 from model_provider import *
 
@@ -31,8 +32,10 @@ freeze_no = int(sys.argv[2])
 model = None
 if drift_type == "flip" or drift_type == "rotate":
     model = load_model("model_base.h5")
-elif drift_type == "remap" or drift_type == "transfer" or drift_type == "appear":
+elif drift_type == "appear":
     model = load_model("model_base_A_Z.h5")
+elif drift_type == "remap" or drift_type == "transfer":
+    model = load_model("model_base_0_9.h5")
 
 # freeze layers
 dict = {1: ["layer1"],

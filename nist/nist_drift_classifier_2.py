@@ -30,7 +30,7 @@ drift_type = sys.argv[1]
 
 # settings
 img_size = 128
-gen_batch_size = 20
+gen_batch_size = 700 #20
 epochs = 20
 
 # prepare data
@@ -124,8 +124,9 @@ for i in range(nbBaseBatches):
 
     print(X.shape)
     print(len(X))
+    print(len(y_E))
 
-    result_E = model_Ei.fit(X, y_E, batch_size=20, epochs=10)
+    result_E = model_Ei.fit(X, y_E, batch_size=10, epochs=10)
     # result_C = model_Ci.fit(X, y, batch_size=20, epochs=10)
 
     # lossArray.append(np.mean(result_C.history["loss"]))
@@ -189,7 +190,7 @@ for i in range(nbBaseBatches, nbBatches):
     accChainedArray.append(accChained)
 
     # training
-    model_Ei.fit(X_combine, y_combine, batch_size=20, epochs=10)
+    model_Ei.fit(X_combine, y_combine, batch_size=10, epochs=10)
     # model_Ci.fit(X, y, batch_size=20, epochs=10)
 
 endTime = datetime.datetime.now()

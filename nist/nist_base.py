@@ -54,5 +54,6 @@ model.fit_generator(
 
 
 model.save("model_base.h5")
+model.save_weights("model_base_weigths.h5")
 
 K.clear_session()  

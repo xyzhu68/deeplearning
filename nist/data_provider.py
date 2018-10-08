@@ -30,14 +30,14 @@ def appear(X, y, isBase):
         size = len(X)
         x_array = []
         y_array = []
+        y_array_E = []
         for i in range(size):
             yValue = np.argmax(y[i])
             if yValue > 9:
                 x_array.append(X[i])
                 y_array.extend(y[i])
-            
+                y_array_E.append(0)
 
-        y_array_E = np.zeros(len(y_array))
         #y_array = to_categorical(y_array, 10)
         x_array = np.asarray(x_array)
         x_array = x_array.reshape(-1, 128, 128, 1)
@@ -58,14 +58,14 @@ def remap(X, y, firstHalf):
         size = len(X)
         x_array = []
         y_array = []
+        y_array_E = []
         for i in range(size):
             yValue = np.argmax(y[i])
             if yValue < 10:
                 x_array.append(X[i])
                 y_array.extend(y[i])
-            
+                y_array_E.append(0)
 
-        y_array_E = np.zeros(len(y_array))
         #y_array = to_categorical(y_array, 10)
         x_array = np.asarray(x_array)
         x_array = x_array.reshape(-1, 128, 128, 1)
@@ -74,16 +74,19 @@ def remap(X, y, firstHalf):
         size = len(X)
         x_array = []
         y_array = []
+        y_array_E = []
         for i in range(size):
             yValue = np.argmax(y[i])
             if 9 < yValue < 20 :
                 x_array.append(X[i])
-                y_array.extend(to_categorical(yValue - 10))
+                y_array.append(yValue - 10)
+                y_array_E.append(1)
         
-        y_array_E = np.full(len(y_array), 1.0)
+        #y_array_E = np.full(len(y_array), 1.0)
         #y_array = to_categorical(y_array, 10)
         x_array = np.asarray(x_array)
         x_array = x_array.reshape(-1, 128, 128, 1)
+        y_array = to_categorical(y_array, 36)
         return (x_array, y_array, y_array_E)
 
 def rot(X,y, angle):
@@ -111,17 +114,17 @@ def transfer(X, y, firstHalf):
         if firstHalf:
             if yValue < 10:
                 x_array.append(X[i])
-                y_array.extend(y[i])
+                y_array.append(yValue)
                 y_array_E.append(0)
         else:
             if yValue >= 10:
                 x_array.append(X[i])
-                y_array.append(y[i])
+                y_array.append(yValue)
                 y_array_E.append(1)
         
-    #y_array = to_categorical(y_array, 10)
     x_array = np.asarray(x_array)
     x_array = x_array.reshape(-1, 128, 128, 1)
+    y_array = to_categorical(y_array, 36)
     return (x_array, y_array, y_array_E)
 
 def combine_Ei_training_data(drift_type, X_org, y_org, X, y_E):
