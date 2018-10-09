@@ -130,7 +130,7 @@ beginTime = datetime.datetime.now()
 # settings
 totalDataSize = 60000
 nbBatches = 100 # devide dataset into 100 batches
-nbBaseBatches = 1#20 # size of base dataset
+nbBaseBatches = 20 # size of base dataset
 sizeOneBatch = totalDataSize // nbBatches
 
 model_resnet = None
