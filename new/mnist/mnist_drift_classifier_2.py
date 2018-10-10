@@ -151,6 +151,7 @@ accArray_P = []
 indices = []
 accArray_Base = []
 lossArray_Base = []
+accEiPi = []
 
 # get data
 gen = data_generator(sizeOneBatch)
@@ -168,6 +169,7 @@ for i in range(nbBaseBatches):
     accArray_E.append(None)
     lossArray_P.append(None)
     accArray_P.append(None)
+    accEiPi.append(None)
 
 if resnet:
     C0Weights = "C0_weights_resnet_{0}.h5".format(drift_type)
@@ -188,7 +190,7 @@ if freeze_add_block >= 0:
 # model_Ei, _ = make_resnet_model(True, freeze_Ei, "") if resnet else make_simple_model(True, 0, "")
 if resnet:
     model_Ci, _ = make_resnet_model(False, freeze_Ci, C0Weights)
-    model_Ei, _ = make_resnet_model(True, freeze_Ei, "")
+    model_Ei, _ = make_resnet_model(True, freeze_Ei, C0Weights)
 else:
     model_Ci = make_simple_model(False, 4, C0Weights)
     model_Ei = make_simple_model(True, 0, "")
@@ -222,6 +224,7 @@ for i in range(nbBaseBatches, nbBatches):
         X, y, _ = transfer(X_org, y_org, i < nbBatches/2)
         data_changed = i >= nbBatches/2
 
+    accEiPi.append(calc_accuracy(model_C0, model_Ei, model_Ci, X, y))
     x_Ei = []
     y_Ei = []
     x_Pi = []
@@ -255,9 +258,12 @@ for i in range(nbBaseBatches, nbBatches):
         h_Pi = model_Ci.fit(x_Pi, y_Pi, batch_size = 50, epochs = 10)
         accArray_P.append(np.mean(h_Pi.history["categorical_accuracy"]))
         lossArray_P.append(np.mean(h_Pi.history["loss"]))
+
+        # accEiPi.append(calc_accuracy(model_C0, model_Ei, model_Ci, x_Pi, y_Pi))
     else:
         accArray_P.append(None)
         lossArray_P.append(None)
+        # accEiPi.append(None)
     
     
     indices.append(i)
@@ -284,20 +290,26 @@ np.savez(npFileName, accBase = accArray_Base,
                      indices=indices,
                      duration=str(endTime - beginTime))
 
+# save models
+if resnet:
+    freeze = str(freeze_add_block) if freeze_add_block >= 0 else "fs"
+    model_C0.save("model_C0_resnet_{0}_{1}.h5".format(drift_type, freeze))
+    model_Ei.save("model_Ei_resnet_{0}_{1}.h5".format(drift_type, freeze))
+    model_Ci.save("model_Pi_resnet_{0}_{1}.h5".format(drift_type, freeze))
+else:
+    model_C0.save("model_C0_simple_{0}_{1}.h5".format(drift_type, nbFilters))
+    model_Ei.save("model_Ei_simple_{0}_{1}.h5".format(drift_type, nbFilters))
+    model_Ci.save("model_Pi_simple_{0}_{1}.h5".format(drift_type, nbFilters))
+
 # result of accuracy
 # plt.plot(indices, accArray_Base, label="acc base")
 # plt.plot(indices, accArray_E, label="acc Ei")
-# plt.plot(indices, accArray_P, label="acc Patching")
+# plt.plot(indices, accArray_P, label="acc Pi")
+# plt.plot(indices, accEiPi, label="acc Ei+Pi")
 # plt.title("Accuracy")
 # plt.ylabel("Accuracy")
 # plt.xlabel("Batch")
 # plt.legend()
 # plt.show()
-# pic_file_name = ""
-# if resnet:
-#     pic_file_name = "accuracy_{0}_resnet_{1}.png".format(drift_type, freeze_add_block)
-# else:
-#     pic_file_name = "accuracy_{0}_fs.png".format(drift_type)
 
-# plt.savefig(pic_file_name)
 
