@@ -105,11 +105,11 @@ def make_simple_model(Ei, suffix):
     model.add(Activation('relu', name="layer3"))
     model.add(MaxPooling2D(name="layer4", pool_size=(nb_pool, nb_pool)))
 
-    model.add(Conv2D(nb_filters * 2, (nb_conv, nb_conv), padding='valid', name="layer5"+suffix))
-    model.add(Conv2D(nb_filters * 2, (nb_conv, nb_conv), padding='valid', name="layer6"+suffix))
-    model.add(Activation('relu', name="layer7"+suffix))
-    model.add(MaxPooling2D(pool_size=(nb_pool, nb_pool), name="layer8"+suffix))
-    model.add(Dropout(0.25, name="layer9"+suffix))
+    model.add(Conv2D(nb_filters * 2, (nb_conv, nb_conv), padding='valid', name="layer5"))
+    model.add(Conv2D(nb_filters * 2, (nb_conv, nb_conv), padding='valid', name="layer6"))
+    model.add(Activation('relu', name="layer7"))
+    model.add(MaxPooling2D(pool_size=(nb_pool, nb_pool), name="layer8"))
+    model.add(Dropout(0.25, name="layer9"))
 
 
     model.add(Flatten(name="Flatten"+suffix))

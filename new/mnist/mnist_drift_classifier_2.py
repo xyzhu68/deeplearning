@@ -159,7 +159,21 @@ gen = data_generator(sizeOneBatch)
 for i in range(nbBaseBatches):
     print(i)
     X, y = next(gen)
-    y = to_categorical(y, 10)
+
+    if drift_type == "flip":
+        X, y, _ = flip_images(X, y, False)
+    elif drift_type == "rotate":
+        X, y, _ = rot(X, y, 0)
+    elif drift_type == "appear":
+        X, y, _ = appear(X, y, True)
+    elif drift_type == "remap":
+        X, y, _ = remap(X, y, True)
+    elif drift_type == "transfer":
+        X, y, _ = transfer(X, y, True)
+    else:
+        print("Unknown drift type")
+        exit()
+
     history = model_C0.fit(X, y, batch_size=50, epochs = 10)
     accArray_Base.append(np.mean(history.history["categorical_accuracy"]))
     lossArray_Base.append(np.mean(history.history["loss"]))
@@ -286,7 +300,8 @@ np.savez(npFileName, accBase = accArray_Base,
                      accE = accArray_E,
                      lossE = lossArray_E,
                      accP = accArray_P,
-                     lossP = lossArray_P, 
+                     lossP = lossArray_P,
+                     accEiPi = accEiPi,
                      indices=indices,
                      duration=str(endTime - beginTime))
 

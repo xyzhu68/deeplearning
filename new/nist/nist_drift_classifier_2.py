@@ -91,6 +91,19 @@ accEiPi = []
 for i in range(nbBaseBatches):
     print(i)
     X, y = train_generator.next()
+    if drift_type == "flip":
+        X, y, _ = flip_images(X, y, False)
+    elif drift_type == "rotate":
+        X, y, _ = rot(X, y, 0)
+    elif drift_type == "appear":
+        X, y, _ = appear(X, y, True)
+    elif drift_type == "remap":
+        X, y, _ = remap(X, y, True)
+    elif drift_type == "transfer":
+        X, y, _ = transfer(X, y, True)
+    else:
+        print("Unknown drift type")
+        exit()
 
     history = model_C0.fit(X, y, batch_size=10, epochs = 10)
     accArray_Base.append(np.mean(history.history["categorical_accuracy"]))
@@ -109,17 +122,23 @@ model_C0.save_weights(C0Weights)
 
 model_Ci = make_simple_model(False, "Ci")
 model_Ci.load_weights(C0Weights, by_name=True)
-layerToFreeze = 4
-if nbFreeze > 0:
-    layerToFreeze = nbFreeze
 for i in range(len(model_Ci.layers)):
+    l = model_Ci.layers[i]
     if i < nbFreeze:
-        model_Ci.layers[i].trainable = False
+        l.trainable = False
+        print("frozen layer {0}".format(l.name))
+    else:
+        print("free layer {0}".format(l.name))
+
 model_Ei = make_simple_model(True, "Ei")
 model_Ei.load_weights(C0Weights, by_name=True)
 for i in range(len(model_Ei.layers)):
+    l = model_Ei.layers[i]
     if i < nbFreeze:
-        model_Ei.layers[i].trainable = False
+        l.trainable = False
+        print("frozen layer {0}".format(l.name))
+    else:
+        print("free layer {0}".format(l.name))
 
 # adaption: data changed
 angle = 0 # for rotate
@@ -206,7 +225,8 @@ np.savez(npFileName, accBase = accArray_Base,
                      accE = accArray_E,
                      lossE = lossArray_E,
                      accP = accArray_P,
-                     lossP = lossArray_P, 
+                     lossP = lossArray_P,
+                     accEiPi = accEiPi,
                      indices=indices,
                      duration=str(endTime - beginTime))
 
@@ -216,14 +236,14 @@ model_Ei.save("model_Ei_simple_{0}_{1}.h5".format(drift_type, freeze))
 model_Ci.save("model_Pi_simple_{0}_{1}.h5".format(drift_type, freeze))
 
 # result of accuracy
-plt.plot(indices, accArray_Base, label="acc base")
-plt.plot(indices, accArray_E, label="acc Ei")
-plt.plot(indices, accArray_P, label="acc Pi")
-plt.plot(indices, accEiPi, label="acc Ei+Pi")
-plt.title("Accuracy")
-plt.ylabel("Accuracy")
-plt.xlabel("Batch")
-plt.legend()
-plt.show()
+# plt.plot(indices, accArray_Base, label="acc base")
+# plt.plot(indices, accArray_E, label="acc Ei")
+# plt.plot(indices, accArray_P, label="acc Pi")
+# plt.plot(indices, accEiPi, label="acc Ei+Pi")
+# plt.title("Accuracy")
+# plt.ylabel("Accuracy")
+# plt.xlabel("Batch")
+# plt.legend()
+# plt.show()
 
 
