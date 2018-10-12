@@ -186,10 +186,11 @@ for i in range(nbBaseBatches):
     accEiPi.append(None)
 
 if resnet:
-    C0Weights = "C0_weights_resnet_{0}.h5".format(drift_type)
+    freeze = "fs" if freeze_add_block < 0 else str(freeze_add_block)
+    C0Weights = "C0_weights_resnet_{0}_{1}.h5".format(drift_type, freeze)
     model_resnet.save_weights(C0Weights)
 else:
-    C0Weights = "C0_weigths_simple_{0}.h5".format(drift_type)
+    C0Weights = "C0_weigths_simple_{0}_{1}.h5".format(drift_type, nbFilters)
     model_C0.save_weights(C0Weights)
 
 # C0Weights = "C0_weights_resnet_{0}.h5".format(drift_type) if resnet else "C0_weigths_simple_{0}.h5".format(drift_type)
@@ -241,8 +242,8 @@ for i in range(nbBaseBatches, nbBatches):
     accEiPi.append(calc_accuracy(model_C0, model_Ei, model_Ci, X, y))
     x_Ei = []
     y_Ei = []
-    x_Pi = []
-    y_Pi = []
+    # x_Pi = []
+    # y_Pi = []
     for index in range(len(X)):
         predict = model_C0.predict(X[index].reshape(1, 28, 28, 1), batch_size=1)
         if np.argmax(predict) == np.argmax(y[index]):
@@ -251,8 +252,8 @@ for i in range(nbBaseBatches, nbBatches):
         else:
             x_Ei.append(X[index])
             y_Ei.append(1)
-            x_Pi.append(X[index])
-            y_Pi.append(y[index])
+            # x_Pi.append(X[index])
+            # y_Pi.append(y[index])
 
     if len(x_Ei) > 0:
         x_Ei = np.asarray(x_Ei)
@@ -264,21 +265,23 @@ for i in range(nbBaseBatches, nbBatches):
         accArray_E.append(None)
         lossArray_E.append(None)
 
-    if len(x_Pi) > 0:
-        x_Pi = np.asarray(x_Pi)
-        x_Pi = x_Pi.reshape(-1, 28, 28, 1)
-        y_Pi = np.asarray(y_Pi)
-        y_Pi = y_Pi.reshape(-1, 10)
-        h_Pi = model_Ci.fit(x_Pi, y_Pi, batch_size = 50, epochs = 10)
-        accArray_P.append(np.mean(h_Pi.history["categorical_accuracy"]))
-        lossArray_P.append(np.mean(h_Pi.history["loss"]))
+    # if len(x_Pi) > 0:
+    #     x_Pi = np.asarray(x_Pi)
+    #     x_Pi = x_Pi.reshape(-1, 28, 28, 1)
+    #     y_Pi = np.asarray(y_Pi)
+    #     y_Pi = y_Pi.reshape(-1, 10)
+    #     h_Pi = model_Ci.fit(x_Pi, y_Pi, batch_size = 50, epochs = 10)
+    #     accArray_P.append(np.mean(h_Pi.history["categorical_accuracy"]))
+    #     lossArray_P.append(np.mean(h_Pi.history["loss"]))
 
-        # accEiPi.append(calc_accuracy(model_C0, model_Ei, model_Ci, x_Pi, y_Pi))
-    else:
-        accArray_P.append(None)
-        lossArray_P.append(None)
-        # accEiPi.append(None)
-    
+    #     # accEiPi.append(calc_accuracy(model_C0, model_Ei, model_Ci, x_Pi, y_Pi))
+    # else:
+    #     accArray_P.append(None)
+    #     lossArray_P.append(None)
+    #     # accEiPi.append(None)
+    h_Pi = model_Ci.fit(X, y, batch_size=50, epochs=10)
+    accArray_P.append(np.mean(h_Pi.history["categorical_accuracy"]))
+    lossArray_P.append(np.mean(h_Pi.history["loss"]))
     
     indices.append(i)
 

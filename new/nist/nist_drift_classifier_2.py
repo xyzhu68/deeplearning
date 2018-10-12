@@ -197,18 +197,20 @@ for i in range(nbBaseBatches, nbBatches):
         accArray_E.append(None)
         lossArray_E.append(None)
 
-    if len(x_Pi) > 0:
-        x_Pi = np.asarray(x_Pi)
-        x_Pi = x_Pi.reshape(-1, img_size, img_size, 1)
-        y_Pi = np.asarray(y_Pi)
-        y_Pi = y_Pi.reshape(-1, 36)
-        h_Pi = model_Ci.fit(x_Pi, y_Pi, batch_size = 10, epochs = 10)
-        accArray_P.append(np.mean(h_Pi.history["categorical_accuracy"]))
-        lossArray_P.append(np.mean(h_Pi.history["loss"]))
-    else:
-        accArray_P.append(None)
-        lossArray_P.append(None)
-    
+    # if len(x_Pi) > 0:
+    #     x_Pi = np.asarray(x_Pi)
+    #     x_Pi = x_Pi.reshape(-1, img_size, img_size, 1)
+    #     y_Pi = np.asarray(y_Pi)
+    #     y_Pi = y_Pi.reshape(-1, 36)
+    #     h_Pi = model_Ci.fit(x_Pi, y_Pi, batch_size = 10, epochs = 10)
+    #     accArray_P.append(np.mean(h_Pi.history["categorical_accuracy"]))
+    #     lossArray_P.append(np.mean(h_Pi.history["loss"]))
+    # else:
+    #     accArray_P.append(None)
+    #     lossArray_P.append(None)
+    h_Pi = model_Ci.fit(X, y, batch_size=10, epochs=10)
+    accArray_P.append(np.mean(h_Pi.history["categorical_accuracy"]))
+    lossArray_P.append(np.mean(h_Pi.history["loss"]))
     
     indices.append(i)
 

@@ -35,10 +35,10 @@ def appear(X, y, isBase):
             yValue = np.argmax(y[i])
             if yValue > 9:
                 x_array.append(X[i])
-                y_array.extend(y[i])
+                y_array.append(yValue)
                 y_array_E.append(0)
 
-        #y_array = to_categorical(y_array, 10)
+        y_array = to_categorical(y_array, 36)
         x_array = np.asarray(x_array)
         x_array = x_array.reshape(-1, 128, 128, 1)
         return (x_array, y_array, y_array_E)
@@ -50,7 +50,7 @@ def appear(X, y, isBase):
                 y_array_E.append(0)
             else:
                 y_array_E.append(1)
-        #y_array = to_categorical(y, 10)
+        y_array = to_categorical(y, 36)
         return (X, y, y_array_E)
 
 def remap(X, y, firstHalf):
@@ -63,10 +63,10 @@ def remap(X, y, firstHalf):
             yValue = np.argmax(y[i])
             if yValue < 10:
                 x_array.append(X[i])
-                y_array.extend(y[i])
+                y_array.append(yValue)
                 y_array_E.append(0)
 
-        #y_array = to_categorical(y_array, 10)
+        y_array = to_categorical(y_array, 36)
         x_array = np.asarray(x_array)
         x_array = x_array.reshape(-1, 128, 128, 1)
         return (x_array, y_array, y_array_E)
@@ -83,7 +83,7 @@ def remap(X, y, firstHalf):
                 y_array_E.append(1)
         
         #y_array_E = np.full(len(y_array), 1.0)
-        #y_array = to_categorical(y_array, 10)
+        y_array = to_categorical(y_array, 36)
         x_array = np.asarray(x_array)
         x_array = x_array.reshape(-1, 128, 128, 1)
         y_array = to_categorical(y_array, 36)

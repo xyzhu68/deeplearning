@@ -8,3 +8,7 @@ https://github.com/codekansas/keras-resnet resnet
 https://medium.com/@14prakash/understanding-and-implementing-architectures-of-resnet-and-resnext-for-state-of-the-art-image-cf51669e1624
 
 https://ankivil.com/mnist-database-and-simple-classification-networks/ MLP(full-connected)
+
+CNN fine-tuning:
+http://vashishtm.net/pdf/practices-fine-tuning.pdf
+https://flyyufelix.github.io/2016/10/03/fine-tuning-in-keras-part1.html

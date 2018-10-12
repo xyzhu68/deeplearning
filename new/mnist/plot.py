@@ -9,16 +9,18 @@ def plot_one_npz(fileName):
     accArray_Base = data["accBase"]
     accArray_E = data["accE"]
     accArray_P = data["accP"]
+    accEiPi = data["accEiPi"]
     print(indices)
     plt.hold(True)
 
     plt.plot(indices, accArray_Base, label="acc base")
     plt.plot(indices, accArray_E, label="acc Ei")
-    plt.plot(indices, accArray_P, label="acc Patching")
+    plt.plot(indices, accArray_P, label="acc Pi")
+    plt.plot(indices, accEiPi, label = "Ei + Pi")
     plt.title("Accuracy")
     plt.ylabel("Accuracy")
     plt.xlabel("Batch")
     plt.legend()
     plt.show()
 
-plot_one_npz("mnist_drift_flip_simple_64.npz")
+plot_one_npz("../mnist - Kopie/mnist_drift_flip_simple_64.npz")
