@@ -86,7 +86,7 @@ def remap(X, y, firstHalf):
         y_array = to_categorical(y_array, 36)
         x_array = np.asarray(x_array)
         x_array = x_array.reshape(-1, 128, 128, 1)
-        y_array = to_categorical(y_array, 36)
+        
         return (x_array, y_array, y_array_E)
 
 def rot(X,y, angle):
@@ -109,7 +109,8 @@ def transfer(X, y, firstHalf):
     x_array = []
     y_array = []
     y_array_E = []
-    for i in range(len(X)):
+    size = len(X)
+    for i in range(size):
         yValue = np.argmax(y[i])
         if firstHalf:
             if yValue < 10:
@@ -126,6 +127,7 @@ def transfer(X, y, firstHalf):
     x_array = x_array.reshape(-1, 128, 128, 1)
     y_array = to_categorical(y_array, 36)
     return (x_array, y_array, y_array_E)
+
 
 def combine_Ei_training_data(drift_type, X_org, y_org, X, y_E):
     if drift_type == "flip" or drift_type == "rotate":
