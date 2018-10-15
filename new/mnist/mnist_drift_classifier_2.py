@@ -229,8 +229,10 @@ for i in range(nbBaseBatches, nbBatches):
         X, y, _ = remap(X_org, y_org, i < nbBatches/2)
         data_changed = i >= nbBatches/2
     elif (drift_type == "rotate"):
-        if i > 50 and i < 85 and angle <= 180:
+        if i > 50:
             angle += 5
+			if angle > 180:
+				angle = 180
         else:
             angle = 0
             data_changed = False
