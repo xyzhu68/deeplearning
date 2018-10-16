@@ -10,8 +10,9 @@ def plot_one_npz(fileName):
     accArray_E = data["accE"]
     accArray_P = data["accP"]
     accEiPi = data["accEiPi"]
-    print(indices)
-    plt.hold(True)
+    # print(indices)
+    # plt.hold(True)
+
 
     plt.plot(indices, accArray_Base, label="acc base")
     plt.plot(indices, accArray_E, label="acc Ei")
@@ -23,4 +24,4 @@ def plot_one_npz(fileName):
     plt.legend()
     plt.show()
 
-plot_one_npz("../mnist - Kopie/mnist_drift_transfer_simple_64.npz")
+plot_one_npz("nist_drift_remap_simple_fs.npz")

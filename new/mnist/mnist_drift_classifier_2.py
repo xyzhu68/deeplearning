@@ -231,8 +231,8 @@ for i in range(nbBaseBatches, nbBatches):
     elif (drift_type == "rotate"):
         if i > 50:
             angle += 5
-			if angle > 180:
-				angle = 180
+            if angle > 180:
+                angle = 180
         else:
             angle = 0
             data_changed = False
@@ -246,11 +246,13 @@ for i in range(nbBaseBatches, nbBatches):
     y_Ei = []
     # x_Pi = []
     # y_Pi = []
+    base_correct = 0
     for index in range(len(X)):
         predict = model_C0.predict(X[index].reshape(1, 28, 28, 1), batch_size=1)
         if np.argmax(predict) == np.argmax(y[index]):
             x_Ei.append(X[index])
             y_Ei.append(0)
+            base_correct += 1
         else:
             x_Ei.append(X[index])
             y_Ei.append(1)
@@ -287,7 +289,7 @@ for i in range(nbBaseBatches, nbBatches):
     
     indices.append(i)
 
-    accArray_Base.append(None)
+    accArray_Base.append(base_correct / len(X))
     lossArray_Base.append(None)
     
    
