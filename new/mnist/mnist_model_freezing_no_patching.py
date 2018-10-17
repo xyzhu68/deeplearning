@@ -83,50 +83,51 @@ def calc_accuracy(modelC0, modelEi, modelCi, X, y):
         index += 1
     return correct / len(X), tp, tn, fp, fn
 
-# model from scratch
-def make_model(Ei):
-    nb_filters = 64
-    nb_conv = 3
-    img_rows = 28
-    img_cols = 28
-    nb_pool = 2
+# # model from scratch
+# def make_model(Ei):
+#     nb_filters = 64
+#     nb_conv = 3
+#     img_rows = 28
+#     img_cols = 28
+#     nb_pool = 2
 
-    model = Sequential()
-    model.add(Conv2D(nb_filters, (nb_conv, nb_conv),
-                    name="layer1",
-                    padding='valid',
-                    input_shape=(img_rows, img_cols, 1)))
-    model.add(Conv2D(nb_filters, (nb_conv, nb_conv), padding='valid', name="layer2"))
-    model.add(Activation('relu', name="layer3"))
-    model.add(MaxPooling2D(name="layer4", pool_size=(nb_pool, nb_pool)))
+#     model = Sequential()
+#     model.add(Conv2D(nb_filters, (nb_conv, nb_conv),
+#                     name="layer1",
+#                     padding='valid',
+#                     input_shape=(img_rows, img_cols, 1)))
+#     model.add(Conv2D(nb_filters, (nb_conv, nb_conv), padding='valid', name="layer2"))
+#     model.add(Activation('relu', name="layer3"))
+#     model.add(MaxPooling2D(name="layer4", pool_size=(nb_pool, nb_pool)))
 
-    model.add(Conv2D(nb_filters * 2, (nb_conv, nb_conv), padding='valid', name="layer5"))
-    model.add(Conv2D(nb_filters * 2, (nb_conv, nb_conv), padding='valid', name="layer6"))
-    model.add(Activation('relu', name="layer7"))
-    model.add(MaxPooling2D(pool_size=(nb_pool, nb_pool), name="layer8"))
-    model.add(Dropout(0.25, name="layer9"))
+#     model.add(Conv2D(nb_filters * 2, (nb_conv, nb_conv), padding='valid', name="layer5"))
+#     model.add(Conv2D(nb_filters * 2, (nb_conv, nb_conv), padding='valid', name="layer6"))
+#     model.add(Activation('relu', name="layer7"))
+#     model.add(MaxPooling2D(pool_size=(nb_pool, nb_pool), name="layer8"))
+#     model.add(Dropout(0.25, name="layer9"))
 
 
-    model.add(Flatten(name="Flatten"))
-    model.add(Dense(128))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.5))
-    if Ei:
-        model.add(Dense(1))
-        model.add(Activation('sigmoid'))
-        model.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['binary_accuracy'])
-    else:
-        model.add(Dense(10))
-        model.add(Activation('softmax'))
-        model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['categorical_accuracy'])
+#     model.add(Flatten(name="Flatten"))
+#     model.add(Dense(128))
+#     model.add(Activation('relu'))
+#     model.add(Dropout(0.5))
+#     if Ei:
+#         model.add(Dense(1))
+#         model.add(Activation('sigmoid'))
+#         model.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['binary_accuracy'])
+#     else:
+#         model.add(Dense(10))
+#         model.add(Activation('softmax'))
+#         model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['categorical_accuracy'])
     
 
-    return model
+#     return model
 
-def make_resnet_model(Ei, n):
+def make_resnet_model(Ei, n, weights):
     print("resnet used")
     model_resnet = make_resnet()
-    model_resnet.load_weights("model_base_resnet_weights.h5")
+    if n > 0: 
+        model_resnet.load_weights(weights)
     
     count_add = 0
     for l in model_resnet.layers:
@@ -170,11 +171,12 @@ sizeOneBatch = totalDataSize // nbBatches
 # build model
 model = None
 if resnet:
-    freeze = "fs" if freeze_add_block < 0 else str(freeze_add_block)
+    freeze = "fs" if freeze_add_block <= 0 else str(freeze_add_block)
     C0Weights = "C0_weights_resnet_{0}_{1}.h5".format(drift_type, freeze)
 	
-    model = make_resnet_model(False, freeze_add_block)
-    model.load_weights(C0Weights)
+    model = make_resnet_model(False, freeze_add_block, C0Weights)
+    # if freeze_add_block > 0:
+    #      model.load_weights(C0Weights)
 
 lossArray = []
 accArray = []
@@ -214,9 +216,9 @@ for i in range(nbBatches):
     print(X.shape)
     print(len(X))
 
-    result = model.fit(X, y_E, batch_size=50, epochs=10)
+    result = model.fit(X, y, batch_size=50, epochs=10)
     lossArray.append(np.mean(result.history["loss"]))
-    accArray.append(np.mean (result.history["binary_accuracy"]))
+    accArray.append(np.mean (result.history["categorical_accuracy"]))
     indices.append(i)
 
 
