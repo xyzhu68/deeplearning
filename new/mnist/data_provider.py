@@ -44,11 +44,11 @@ def appear(X, y, isBase):
         return (x_array, y_array, y_array_E)
     else:
         y_array_E = []
-        for yValue in y:
-            if yValue < 5:
-                y_array_E.append(0)
-            else:
-                y_array_E.append(1)
+        # for yValue in y:
+        #     if yValue < 5:
+        #         y_array_E.append(0)
+        #     else:
+        #         y_array_E.append(1)
         y_array = to_categorical(y, 10)
         return (X, y_array, y_array_E)
 
@@ -125,25 +125,25 @@ def transfer(X, y, firstHalf):
     x_array = x_array.reshape(-1, 28, 28, 1)
     return (x_array, y_array, y_array_E)
 
-def combine_Ei_training_data(drift_type, X_org, y_org, X, y_E):
-    if drift_type == "flip" or drift_type == "rotate":
-        y_E_org = np.zeros(len(y_E))
-        X_combine = np.concatenate((X_org, X))
-        y_combine = np.concatenate((y_E_org, y_E))
-        return shuffle(X_combine, y_combine)
-    elif drift_type == "remap" or drift_type == "transfer":
-        size = len(X)
-        x_array = []
-        for i in range(size):
-            yValue = y_org[i]
-            if yValue < 5:
-                x_array.append(X_org[i])
-        y_E_org = np.zeros(len(x_array))
-        x_array = np.asarray(x_array)
-        x_array = x_array.reshape(-1, 28, 28, 1)
-        X_combine = np.concatenate((x_array, X))
-        y_combine = np.concatenate((y_E_org, y_E))
-        return shuffle(X_combine, y_combine)
-    else:
-        return (X, y_E)
+# def combine_Ei_training_data(drift_type, X_org, y_org, X, y_E):
+#     if drift_type == "flip" or drift_type == "rotate":
+#         y_E_org = np.zeros(len(y_E))
+#         X_combine = np.concatenate((X_org, X))
+#         y_combine = np.concatenate((y_E_org, y_E))
+#         return shuffle(X_combine, y_combine)
+#     elif drift_type == "remap" or drift_type == "transfer":
+#         size = len(X)
+#         x_array = []
+#         for i in range(size):
+#             yValue = y_org[i]
+#             if yValue < 5:
+#                 x_array.append(X_org[i])
+#         y_E_org = np.zeros(len(x_array))
+#         x_array = np.asarray(x_array)
+#         x_array = x_array.reshape(-1, 28, 28, 1)
+#         X_combine = np.concatenate((x_array, X))
+#         y_combine = np.concatenate((y_E_org, y_E))
+#         return shuffle(X_combine, y_combine)
+#     else:
+#         return (X, y_E)
     
