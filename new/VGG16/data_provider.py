@@ -49,7 +49,7 @@ def appear(X, y, isBase):
         y_array_E = []
         for yItem in y:
             yValue = np.argmax(yItem)
-            if yValue >= nbClasses // 2
+            if yValue >= nbClasses // 2:
                 y_array_E.append(0)
             else:
                 y_array_E.append(1)
