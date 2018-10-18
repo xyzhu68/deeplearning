@@ -144,14 +144,14 @@ else:
 # model_Ei = make_resnet_model(True, freeze_add_block) if resnet else make_model(True)
 
 
-lossArray_E = []
-accArray_E = []
-lossArray_P = []
-accArray_P = []
-indices = []
-accArray_Base = []
-lossArray_Base = []
-accEiPi = []
+lossArray_E = [] # loss of Ei
+accArray_E = [] # accuracy of Ei
+lossArray_P = [] # loss of Pi
+accArray_P = [] # accuracy of Pi
+indices = [] # index of batches
+accArray_Base = [] # accuray of C0 (base model)
+lossArray_Base = [] # loss of C0
+accEiPi = [] # accuracy of Ei + Pi
 
 # get data
 gen = data_generator(sizeOneBatch)
