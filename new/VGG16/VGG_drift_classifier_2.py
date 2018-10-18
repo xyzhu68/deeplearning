@@ -14,7 +14,7 @@ from keras.activations import relu, softmax, sigmoid
 import datetime
 
 from data_provider import *
-from model_provider import *
+
 
 # settings for GPU
 import tensorflow as tf
@@ -30,9 +30,9 @@ if nbArgs < 2:
     exit()
 drift_type = sys.argv[1]
 
-nbFreeze = -1
-if nbArgs > 2:
-    nbFreeze = int(sys.argv[2])
+# nbFreeze = -1
+# if nbArgs > 2:
+#     nbFreeze = int(sys.argv[2])
 
 # settings
 img_size = 150
@@ -70,23 +70,33 @@ def make_vgg_model(Ei):
     fc_model.add(Flatten(input_shape=base_model.output_shape[1:]))
     fc_model.add(Dense(256, activation='relu'))
     fc_model.add(Dropout(0.5))
-    fc_model.add(Dense(nbClasses, activation='softmax'))
+    if Ei:
+        fc_model.add(Dense(1, activation='sigmoid'))
+    else:
+        fc_model.add(Dense(nbClasses, activation='softmax'))
 
     # add the model on the convolutional base
     model = Model(input=base_model.input, output=fc_model(base_model.output))
     for layer in model.layers[:15]:
         layer.trainable = False
 
-    model.compile(loss='categorical_crossentropy',
-                optimizer=optimizers.SGD(lr=1e-4, momentum=0.9),
-                metrics=['categorical_accuracy'])
+    if Ei:
+        model.compile(loss='binary_crossentropy',
+                        optimizer=optimizers.SGD(lr=1e-4, momentum=0.9),
+                        metrics=['binary_accuracy'])
+    else:
+        model.compile(loss='categorical_crossentropy',
+                        optimizer=optimizers.SGD(lr=1e-4, momentum=0.9),
+                        metrics=['categorical_accuracy'])
+
+    return model
                 
 #  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 beginTime = datetime.datetime.now()
 
 # prepare data
-train_data_dir = os.path.abspath("../../../dogs") # Anpassen !!!!!!!!!!!!!!!!!
+train_data_dir = os.path.abspath("../../../dog_monkey") 
 train_datagen = ImageDataGenerator(rescale=1. / 255,
     rotation_range=20,
     width_shift_range=0.2,
@@ -114,13 +124,11 @@ accEiPi = []
 
 # training in base phase
 for i in range(nbBaseBatches):
+# for i in range(1):
     print(i)
     X, y = train_generator.next()
-    if drift_type == "flip":
-        X, y, _ = flip_images(X, y, False)
-    elif drift_type == "rotate":
-        X, y, _ = rot(X, y, 0)
-    elif drift_type == "appear":
+    
+    if drift_type == "appear":
         X, y, _ = appear(X, y, True)
     elif drift_type == "remap":
         X, y, _ = remap(X, y, True)
@@ -156,23 +164,11 @@ for i in range(nbBaseBatches, nbBatches):
     data_changed = True
     X = None
     y = None
-    if drift_type == "flip":
-        X, y, _ = flip_images(X_org, y_org, i >= nbBatches/2)
-        data_changed = i >= nbBatches/2
-    elif drift_type == "appear":
+    if drift_type == "appear":
         X, y, _ = appear(X_org, y_org, False)
     elif drift_type == "remap":
         X, y, _ = remap(X_org, y_org, i < nbBatches/2)
         data_changed = i >= nbBatches/2
-    elif (drift_type == "rotate"):
-        if i > nbBatches // 2:
-            angle += 5
-            if angle > 180:
-                angle = 180
-        else:
-            angle = 0
-            data_changed = False
-        X, y, _ = rot(X_org, y_org, angle)
     elif drift_type == "transfer":
         X, y, _ = transfer(X_org, y_org, i < nbBatches/2)
         data_changed = i >= nbBatches/2
@@ -180,8 +176,8 @@ for i in range(nbBaseBatches, nbBatches):
     accEiPi.append(calc_accuracy(model_C0, model_Ei, model_Ci, X, y))
     x_Ei = []
     y_Ei = []
-    x_Pi = []
-    y_Pi = []
+    # x_Pi = []
+    # y_Pi = []
     for index in range(len(X)):
         predict = model_C0.predict(X[index].reshape(1, img_size, img_size, 3), batch_size=1)
         if np.argmax(predict) == np.argmax(y[index]):
@@ -190,8 +186,8 @@ for i in range(nbBaseBatches, nbBatches):
         else:
             x_Ei.append(X[index])
             y_Ei.append(1)
-            x_Pi.append(X[index])
-            y_Pi.append(y[index])
+            # x_Pi.append(X[index])
+            # y_Pi.append(y[index])
 
     if len(x_Ei) > 0:
         x_Ei = np.asarray(x_Ei)
