@@ -116,12 +116,13 @@ for i in range(nbBaseBatches):
     accArray_P.append(None)
     accEiPi.append(None)
 
-freeze = "fs" if nbFreeze < 0 else str(nbFreeze)
+freeze = "fs" if nbFreeze <= 0 else str(nbFreeze)
 C0Weights = "C0_weigths_simple_{0}_{1}.h5".format(drift_type, freeze)
 model_C0.save_weights(C0Weights)
 
 model_Ci = make_simple_model(False, "Ci")
-model_Ci.load_weights(C0Weights, by_name=True)
+if nbFreeze > 0:
+    model_Ci.load_weights(C0Weights, by_name=True)
 for i in range(len(model_Ci.layers)):
     l = model_Ci.layers[i]
     if i < nbFreeze:
@@ -131,7 +132,8 @@ for i in range(len(model_Ci.layers)):
         print("free layer {0}".format(l.name))
 
 model_Ei = make_simple_model(True, "Ei")
-model_Ei.load_weights(C0Weights, by_name=True)
+if nbFreeze > 0:
+     model_Ei.load_weights(C0Weights, by_name=True)
 for i in range(len(model_Ei.layers)):
     l = model_Ei.layers[i]
     if i < nbFreeze:

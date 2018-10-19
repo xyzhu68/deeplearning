@@ -196,9 +196,9 @@ else:
 # C0Weights = "C0_weights_resnet_{0}.h5".format(drift_type) if resnet else "C0_weigths_simple_{0}.h5".format(drift_type)
 # model_C0.save_weights(C0Weights)
 
-freeze_Ci = 6
+freeze_Ci = -1 # 6
 freeze_Ei = -1
-if freeze_add_block >= 0:
+if freeze_add_block > 0:
     freeze_Ci = freeze_add_block
     freeze_Ei = freeze_add_block
 # model_Ci, _ = make_resnet_model(False, freeze_Ci, C0Weights) if resnet else make_simple_model(False, 4, C0Weights)
@@ -207,7 +207,7 @@ if resnet:
     model_Ci, _ = make_resnet_model(False, freeze_Ci, C0Weights)
     model_Ei, _ = make_resnet_model(True, freeze_Ei, C0Weights)
 else:
-    model_Ci = make_simple_model(False, 4, C0Weights)
+    model_Ci = make_simple_model(False, 0, C0Weights)
     model_Ei = make_simple_model(True, 0, "")
 
 # adaption: data changed
