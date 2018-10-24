@@ -7,6 +7,7 @@ from keras.utils import to_categorical
 from keras.preprocessing.image import ImageDataGenerator
 from keras import backend as K
 import sys
+import os
 import matplotlib.pyplot as plt
 from keras.activations import relu, softmax, sigmoid
 import datetime
@@ -30,30 +31,17 @@ if nbArgs < 2:
     exit()
 drift_type = sys.argv[1]
 
-# 1 -- 7
-layerToEngage = 7
+blockToEngage = 4
 if nbArgs > 2:
-    layerToEngage =  int(sys.argv[2])
+    blockToEngage =  int(sys.argv[2])
+    valid = 0 < blockToEngage < 5 # 1, 2, 3, 4
+    if not valid:
+        print("block to engage can only be 1, 2, 3, or 4")
+        exit()
 
+img_size = 128
 
 # Functions +++++++++++++++++++++++++++++++++++++++++++++++++++++++
-def load_data(dataPath):
-    data, _ = arff.loadarff(dataPath)
-    dataArray = np.asarray(data.tolist(), dtype=np.float)
-    X = np.delete(dataArray, 784, 1) / 255
-    X = X.reshape(-1, 28, 28, 1)
-    y = dataArray[:,784]
-    return (X, y)
-
-def data_generator(streamSize): 
-    X, y = load_data(filepath_train)
-    count = 0
-    while True:
-        X_result = X[count : count + streamSize]
-        y_result = y[count : count + streamSize]
-        count += streamSize
-        print("count: %d" % count)
-        yield X_result, y_result
         
 def calc_accuracy(modelC0, modelEi, modelCi, X, y):
     predictEi = modelEi.predict(X)
@@ -62,9 +50,9 @@ def calc_accuracy(modelC0, modelEi, modelCi, X, y):
     predict = None
     for p in predictEi:
         if p[0] > 0.5:
-            predict = modelCi.predict(X[index].reshape(1, 28, 28, 1), batch_size=1)
+            predict = modelCi.predict(X[index].reshape(1, img_size, img_size, 1), batch_size=1)
         else:
-            predict = modelC0.predict(X[index].reshape(1, 28, 28, 1), batch_size=1)
+            predict = modelC0.predict(X[index].reshape(1, img_size, img_size, 1), batch_size=1)
         if (np.argmax(predict) == np.argmax(y[index])):
             correct += 1
         index += 1
@@ -73,47 +61,55 @@ def calc_accuracy(modelC0, modelEi, modelCi, X, y):
 
 def build_model(model_type, weights):
     model = None
-    if layerToEngage == 0:
-        model = Sequential()
-        model.add(Dense(512, input_shape=(784,)))
-        model.add(Activation('relu'))
-    else:
-        model_conv = make_conv_model(64, True)
-        #if weights:
-        #    model_conv.load_weights(weights, by_name=True)
-        # do engagement
-        layersToPop = 7 - layerToEngage
-        if layersToPop < 0:
-            print("layer to engage cannot be greater than 7")
-            exit()
-        for i in range(layersToPop):
-            model_conv.pop()
-        print(model_conv.summary())
-        model = Sequential()
-        model.add(model_conv)
-        model.add(Flatten(name="Flatten"))
-        model.add(Dense(512))
-        model.add(Activation('relu'))
-    
+    # if layerToEngage == 0:
+    #     model = Sequential()
+    #     model.add(Dense(512, input_shape=(128*128,)))
+    #     model.add(Activation('relu'))
+    # else:
+    #     model_conv = make_conv_model(64, True)
+    #     if not weights:
+    #          model_conv.load_weights(weights)
+    #     # do engagement
+    #     layersToPop = 7 - layerToEngage
+    #     if layersToPop < 0:
+    #         print("layer to engage cannot be greater than 7")
+    #         exit()
+    #     for i in range(layersToPop):
+    #         model_conv.pop()
+    #     model = Sequential()
+    #     model.add(model_conv)
+    #     model.add(Flatten(name="Flatten"))
+
+    model_conv = make_conv_model(32, True)
+    if weights:
+        model_conv.load_weights(weights, by_name=True)
+    # do engagement
+    layersToPop = 12 - blockToEngage * 3
+    for i in range(layersToPop):
+        model_conv.pop()
+    model = Sequential()
+    model.add(model_conv)
+    model.add(Flatten(name="Flatten"))
+
+    model.add(Dense(512))
+    model.add(Activation('relu'))
     model.add(Dropout(0.5))
     if model_type == "E":
         model.add(Dense(1, name="Ei_dense1"))
         model.add(Activation('sigmoid', name="Ei_act"))
         model.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['binary_accuracy'])
     elif model_type == "P":
-        model.add(Dense(10))
+        model.add(Dense(36))
         model.add(Activation('softmax'))
         model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['categorical_accuracy'])
     else:
         print("invalid model type: {0}".format(model_type))
 
-    print(model.summary())
-
     return model
 
 def freeze_model(model):
     for i in range(len(model.layers)):
-        if i < layerToEngage:
+        if i < blockToEngage * 3:
             model.layers[i].trainable = False
             print("frozen layer {0}".format(model.layers[i].name))
         else:
@@ -124,13 +120,26 @@ def freeze_model(model):
 beginTime = datetime.datetime.now()
 
 # settings
-totalDataSize = 60000
-nbBatches = 100 # devide dataset into 100 batches
-nbBaseBatches = 20 # size of base dataset
-sizeOneBatch = totalDataSize // nbBatches
+gen_batch_size = 720
+epochs = 10
 
-model_C0 = make_conv_model(64, False)
-model_Base_Updated = make_conv_model(64, False)
+totalDataSize = 72000
+sizeOneBatch = 720
+nbBatches = totalDataSize // sizeOneBatch # devide dataset into batches
+nbBaseBatches = nbBatches // 5 # size of base dataset: 20% of total batches
+
+# prepare data
+train_data_dir = os.path.abspath("../../data/NIST")
+train_datagen = ImageDataGenerator(rescale=1. / 255)
+train_generator = train_datagen.flow_from_directory(
+    train_data_dir,
+    target_size=(img_size, img_size),
+    batch_size=gen_batch_size,
+    color_mode="grayscale",
+    class_mode="categorical")
+
+model_C0 = make_conv_model(32, False)
+model_Base_Updated = make_conv_model(32, False)
 
 
 #lossArray_E = [] # loss of Ei
@@ -146,13 +155,11 @@ accEiPi = [] # accuracy of Ei + Pi
 accMSPi = [] # accuracy of Model Selector + P
 accArray_Freezing = [] # accuracy of freezing model
 
-# get data
-gen = data_generator(sizeOneBatch)
 # training in base phase
 for i in range(nbBaseBatches):
-#for i in range(1):
+#for i in range(1): # !!!!!!!!!!!!
     print(i)
-    X, y = next(gen)
+    X, y = train_generator.next()
 
     if drift_type == "flip":
         X, y, _ = flip_images(X, y, False)
@@ -168,8 +175,8 @@ for i in range(nbBaseBatches):
         print("Unknown drift type")
         exit()
 
-    model_C0.fit(X, y, batch_size=50, epochs = 10)
-    #model_Base_Updated.fit(X, y, batch_size=50, epochs=10)
+    model_C0.fit(X, y, batch_size=20, epochs = epochs)
+    model_Base_Updated.fit(X, y, batch_size=20, epochs=epochs)
 
 C0Weights = "C0_weigths_{0}.h5".format(drift_type)
 model_C0.save_weights(C0Weights)
@@ -177,18 +184,19 @@ model_C0.save_weights(C0Weights)
 model_E = build_model("E", C0Weights)
 model_P = build_model("P", C0Weights)
 model_ms = build_model("E", C0Weights)
-model_freezing = make_conv_model(64, False)
+model_freezing = make_conv_model(32, False)
 model_freezing.load_weights(C0Weights)
 freeze_model(model_freezing)
 model_freezing.compile(loss='categorical_crossentropy', 
                 optimizer='adadelta', metrics=['categorical_accuracy'])
+
 
 # adaption: data changed
 angle = 0 # for rotate
 for i in range(nbBaseBatches, nbBatches):
     print(i)
     
-    X_org, y_org = next(gen)
+    X_org, y_org = train_generator.next()
     
     X = None
     y = None
@@ -210,8 +218,6 @@ for i in range(nbBaseBatches, nbBatches):
     elif drift_type == "transfer":
         X, y, _ = transfer(X_org, y_org, i < nbBatches/2)
 
-    if layerToEngage == 0:
-        X = X.reshape(-1, 784)
 
     accEiPi.append(calc_accuracy(model_C0, model_E, model_P, X, y))
     accMSPi.append(calc_accuracy(model_C0, model_ms, model_P, X, y))
@@ -221,8 +227,8 @@ for i in range(nbBaseBatches, nbBatches):
     y_ms = []
     base_correct = 0
     for index in range(len(X)):
-        predictC0 = model_C0.predict(X[index].reshape(1, 28, 28, 1), batch_size=1)
-        predictP = model_P.predict(X[index].reshape(1, 28, 28, 1), batch_size=1)
+        predictC0 = model_C0.predict(X[index].reshape(1, img_size, img_size, 1), batch_size=1)
+        predictP = model_P.predict(X[index].reshape(1, img_size, img_size, 1), batch_size=1)
         if np.argmax(predictC0) == np.argmax(y[index]):
             x_Ei.append(X[index])
             y_Ei.append(0)
@@ -232,7 +238,6 @@ for i in range(nbBaseBatches, nbBatches):
             y_Ei.append(1)
 
         yLabel = np.argmax(y[index])
-        #print(predictC0[0])
         if predictC0[0][yLabel] > predictP[0][yLabel]:
             x_ms.append(X[index])
             y_ms.append(0)
@@ -241,19 +246,18 @@ for i in range(nbBaseBatches, nbBatches):
             y_ms.append(1)
 
     x_Ei = np.asarray(x_Ei)
-    x_Ei = x_Ei.reshape(-1, 28, 28, 1)
-    loss_E, acc_E = model_E.evaluate(x_Ei, y_Ei, batch_size=50)
-    accArray_E.append(acc_E)
-    h_Ei = model_E.fit(x_Ei, y_Ei, batch_size = 50, epochs = 10)
+    x_Ei = x_Ei.reshape(-1, img_size, img_size, 1)
+    loss_Ei, acc_Ei = model_E.evaluate(x_Ei, y_Ei, batch_size=20)
+    accArray_E.append(acc_Ei)
+    h_Ei = model_E.fit(x_Ei, y_Ei, batch_size = 20, epochs = epochs)
     #accArray_E.append(np.mean(h_Ei.history["binary_accuracy"]))
-    
+
     x_ms = np.asarray(x_ms)
-    x_ms = x_ms.reshape(-1, 28, 28, 1)
-    loss_ms, acc_ms = model_ms.evaluate(x_ms, y_ms, batch_size=50)
+    x_ms = x_ms.reshape(-1, img_size, img_size, 1)
+    loss_ms, acc_ms = model_ms.evaluate(x_ms, y_ms, batch_size=20)
     accArray_MS.append(acc_ms)
-    h_ms = model_ms.fit(x_ms, y_ms, batch_size = 50, epochs = 10)
+    h_ms = model_ms.fit(x_ms, y_ms, batch_size = 20, epochs = epochs)
     #accArray_MS.append(np.mean(h_ms.history["binary_accuracy"]))
-    
     
     # if len(x_Pi) > 0:
     #     x_Pi = np.asarray(x_Pi)
@@ -269,23 +273,20 @@ for i in range(nbBaseBatches, nbBatches):
     #     accArray_P.append(None)
     #     lossArray_P.append(None)
     #     # accEiPi.append(None)
-
-    loss_P, acc_P = model_P.evaluate(X, y, batch_size=50)
-    accArray_P.append(acc_P)
-    h_Pi = model_P.fit(X, y, batch_size=50, epochs=10)
+    loss_Pi, acc_Pi = model_P.evaluate(X, y, batch_size=20)
+    accArray_P.append(acc_Pi)
+    h_Pi = model_P.fit(X, y, batch_size=20, epochs=epochs)
     #accArray_P.append(np.mean(h_Pi.history["categorical_accuracy"]))
-    
 
-    loss_bu, acc_bu = model_Base_Updated.evaluate(X, y, batch_size=50)
+    loss_bu, acc_bu = model_Base_Updated.evaluate(X, y, batch_size=20)
     accArray_Base_Updated.append(acc_bu)
-    h_base_updated = model_Base_Updated.fit(X, y, batch_size=50, epochs=10)
+    h_base_updated = model_Base_Updated.fit(X, y, batch_size=20, epochs=epochs)
     #accArray_Base_Updated.append(np.mean(h_base_updated.history["categorical_accuracy"]))
 
-    loss_freezing, acc_freezing = model_freezing.evaluate(X, y, batch_size=50)
-    accArray_Freezing.append(acc_freezing)
-    h_freezing = model_freezing.fit(X, y, batch_size=50, epochs=10)
+    loss_fr, acc_fr = model_freezing.evaluate(X, y, batch_size=20)
+    accArray_Freezing.append(acc_fr)
+    h_freezing = model_freezing.fit(X, y, batch_size=20, epochs=epochs)
     #accArray_Freezing.append(np.mean(h_freezing.history["categorical_accuracy"]))
-    
     
     indices.append(i)
 
@@ -295,7 +296,7 @@ for i in range(nbBaseBatches, nbBatches):
 endTime = datetime.datetime.now()
 print(endTime - beginTime)
 
-npFileName = "mnist_engage_{0}_{1}.npz".format(drift_type, layerToEngage)
+npFileName = "nist_engage_{0}_{1}.npz".format(drift_type, blockToEngage)
 np.savez(npFileName, accBase = accArray_Base,
                      accBaseUpdated = accArray_Base_Updated,
                      accE = accArray_E,

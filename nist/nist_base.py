@@ -28,7 +28,7 @@ model = make_simple_model(False)
 
 
 # prepare data
-train_data_dir = os.path.abspath("../../by_class_2")
+train_data_dir = os.path.abspath("/Users/guohaode/Downloads/NIST")
 train_datagen = ImageDataGenerator(rescale=1. / 255)
 train_generator = train_datagen.flow_from_directory(
     train_data_dir,
@@ -37,14 +37,15 @@ train_generator = train_datagen.flow_from_directory(
     color_mode="grayscale",
     class_mode="categorical")
 
-# X, y = train_generator.next()
-# for i in range(len(X)):
-#     x1 = X[i]
-#     y1 = y[i]
-#     print(y1)
-#     plt.imshow(x1)
-#     plt.show()
-# exit()
+X, y = train_generator.next()
+for i in range(10):
+    x1 = X[i]
+    print(x1.shape)
+    y1 = y[i]
+    print(np.argmax(y1))
+    plt.imshow(x1.reshape(img_size, img_size))
+    plt.show()
+exit()
 
 
 model.fit_generator(

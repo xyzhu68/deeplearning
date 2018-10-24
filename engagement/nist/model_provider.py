@@ -9,8 +9,8 @@ from keras.models import Model, Sequential
 def make_conv_model(nbFilters, noTop):
     nb_filters = nbFilters # 64
     nb_conv = 3
-    img_rows = 28
-    img_cols = 28
+    img_rows = 128
+    img_cols = 128
     nb_pool = 2
 
     model = Sequential()
@@ -25,34 +25,25 @@ def make_conv_model(nbFilters, noTop):
     model.add(Conv2D(nb_filters * 2, (nb_conv, nb_conv), padding='valid', activation='relu', name="layer4"))
     model.add(Conv2D(nb_filters * 2, (nb_conv, nb_conv), padding='valid', activation='relu', name="layer5"))
     model.add(MaxPooling2D(pool_size=(nb_pool, nb_pool), name="layer6"))
-    model.add(Dropout(0.25, name="layer7"))
+
+    model.add(Conv2D(nb_filters * 3, (nb_conv, nb_conv), padding='valid', activation='relu', name="layer7"))
+    model.add(Conv2D(nb_filters * 3, (nb_conv, nb_conv), padding='valid', activation='relu', name="layer8"))
+    model.add(MaxPooling2D(pool_size=(nb_pool, nb_pool), name="layer9"))
+
+    model.add(Conv2D(nb_filters * 4, (nb_conv, nb_conv), padding='valid', activation='relu', name="layer10"))
+    model.add(Conv2D(nb_filters * 4, (nb_conv, nb_conv), padding='valid', activation='relu', name="layer11"))
+    model.add(MaxPooling2D(pool_size=(nb_pool, nb_pool), name="layer12"))
 
     if noTop:
         return model
 
-
+    model.add(Dropout(0.25, name="layer13"))
     model.add(Flatten(name="Flatten"))
-    model.add(Dense(128))
+    model.add(Dense(512))
     model.add(Activation('relu'))
     model.add(Dropout(0.5))
-    model.add(Dense(10))
+    model.add(Dense(36))
     model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['categorical_accuracy'])
-
-    return model
-
-def make_dnn_model(withCompile):
-    model = Sequential()
-    model.add(Dense(786, name="l1", activation='relu', input_shape=(784,)))
-    model.add(Dense(2048, name="l2", activation='relu'))
-    model.add(Dense(1024, name="l3", activation="relu"))
-    model.add(Dense(1024, name="l4", activation="relu"))
-    model.add(Dense(512, name="l5", activation="relu"))
-    model.add(Dense(128, name="l6", activation="relu"))
-    model.add(Dropout(0.5, name="l7"))
-    model.add(Dense(10, name="l8", activation="softmax"))
-    if withCompile:
-        model.compile(loss='categorical_crossentropy',
-                      optimizer='adadelta', metrics=['categorical_accuracy'])
 
     return model
