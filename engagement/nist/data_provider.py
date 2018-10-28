@@ -44,13 +44,13 @@ def appear(X, y, isBase):
         return (x_array, y_array, y_array_E)
     else:
         y_array_E = []
-        for yItem in y:
-            yValue = np.argmax(yItem)
-            if yValue > 9:
-                y_array_E.append(0)
-            else:
-                y_array_E.append(1)
-        y_array = to_categorical(y, 36)
+        # for yItem in y:
+        #     yValue = np.argmax(yItem)
+        #     if yValue > 9:
+        #         y_array_E.append(0)
+        #     else:
+        #         y_array_E.append(1)
+        # y_array = to_categorical(y, 36)
         return (X, y, y_array_E)
 
 def remap(X, y, firstHalf):

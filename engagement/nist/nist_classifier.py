@@ -40,6 +40,7 @@ if nbArgs > 2:
         exit()
 
 img_size = 128
+nbFilters = 16
 
 # Functions +++++++++++++++++++++++++++++++++++++++++++++++++++++++
         
@@ -66,7 +67,7 @@ def build_model(model_type, weights):
     #     model.add(Dense(512, input_shape=(128*128,)))
     #     model.add(Activation('relu'))
     # else:
-    #     model_conv = make_conv_model(64, True)
+    #     model_conv = make_conv_model(nbFilters, True)
     #     if not weights:
     #          model_conv.load_weights(weights)
     #     # do engagement
@@ -80,13 +81,18 @@ def build_model(model_type, weights):
     #     model.add(model_conv)
     #     model.add(Flatten(name="Flatten"))
 
-    model_conv = make_conv_model(32, True)
+    model_conv = make_conv_model(nbFilters, True)
     if weights:
         model_conv.load_weights(weights, by_name=True)
-    # do engagement
-    layersToPop = 12 - blockToEngage * 3
-    for i in range(layersToPop):
-        model_conv.pop()
+        # do freezing
+        for i in range(len(model_conv.layers)):
+            if i < blockToEngage * 3:
+                model_conv.layers[i].trainable = False
+    else:
+        # do engagement
+        layersToPop = 12 - blockToEngage * 3
+        for i in range(layersToPop):
+            model_conv.pop()
     model = Sequential()
     model.add(model_conv)
     model.add(Flatten(name="Flatten"))
@@ -127,6 +133,8 @@ totalDataSize = 72000
 sizeOneBatch = 720
 nbBatches = totalDataSize // sizeOneBatch # devide dataset into batches
 nbBaseBatches = nbBatches // 5 # size of base dataset: 20% of total batches
+if drift_type == "appear":
+    nbBaseBatches = 30
 
 # prepare data
 train_data_dir = os.path.abspath("../../data/NIST")
@@ -138,8 +146,8 @@ train_generator = train_datagen.flow_from_directory(
     color_mode="grayscale",
     class_mode="categorical")
 
-model_C0 = make_conv_model(32, False)
-model_Base_Updated = make_conv_model(32, False)
+model_C0 = make_conv_model(nbFilters, False)
+model_Base_Updated = make_conv_model(nbFilters, False)
 
 
 #lossArray_E = [] # loss of Ei
@@ -176,25 +184,25 @@ for i in range(nbBaseBatches):
         exit()
 
     model_C0.fit(X, y, batch_size=20, epochs = epochs)
-    model_Base_Updated.fit(X, y, batch_size=20, epochs=epochs)
+    #model_Base_Updated.fit(X, y, batch_size=20, epochs=epochs)
 
 C0Weights = "C0_weigths_{0}.h5".format(drift_type)
 model_C0.save_weights(C0Weights)
 
-model_E = build_model("E", C0Weights)
-model_P = build_model("P", C0Weights)
-model_ms = build_model("E", C0Weights)
-model_freezing = make_conv_model(32, False)
-model_freezing.load_weights(C0Weights)
-freeze_model(model_freezing)
-model_freezing.compile(loss='categorical_crossentropy', 
-                optimizer='adadelta', metrics=['categorical_accuracy'])
+model_E = build_model("E", "")
+model_P = build_model("P", "")
+model_ms = build_model("E", "")
+model_freezing = build_model("P", C0Weights) 
+#model_freezing.load_weights(C0Weights)
+# freeze_model(model_freezing)
+# model_freezing.compile(loss='categorical_crossentropy', 
+#                 optimizer='adadelta', metrics=['categorical_accuracy'])
 
 
 # adaption: data changed
 angle = 0 # for rotate
 for i in range(nbBaseBatches, nbBatches):
-    print(i)
+    print("batch number: {0}".format(i))
     
     X_org, y_org = train_generator.next()
     

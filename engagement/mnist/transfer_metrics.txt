@@ -1,0 +1,46 @@
+Final accuracy
+Base: 0.0
+Base update: 0.9923805900560183
+Freezing: 0.9937177299606311
+NN-Patching: 0.9952013185136754
+NN-Patching-MS: 0.9952013185136754
+
+
+Average accuracy
+Base: 0.0
+Base update: 0.9880095649661006
+Freezing: 0.9851233291192881
+NN-Patching: 0.9864982328682235
+NN-Patching-MS: 0.9864982328682235
+
+
+Recovery Speed
+Base: -30
+Base update: 1
+Freezing: 1
+NN-Patching: 1
+NN-Patching-MS: 2
+
+
+Adaption Rank
+Base: 4.0
+Base update: 2.5
+Freezing: 3.0
+NN-Patching: 2.0
+NN-Patching-MS: 3.5
+
+
+Final rank
+Base: 5.0
+Base update: 2.5
+Freezing: 2.5
+NN-Patching: 2.5
+NN-Patching-MS: 2.5
+
+
+Average oscillation
+Base: 0.0
+Base update: 0.00572117188243112
+Freezing: 0.00790649814297775
+NN-Patching: 0.006605477014102127
+NN-Patching-MS: 0.006605477014102127

@@ -79,15 +79,19 @@ def build_model(model_type, weights):
         model.add(Activation('relu'))
     else:
         model_conv = make_conv_model(64, True)
-        #if weights:
-        #    model_conv.load_weights(weights, by_name=True)
-        # do engagement
-        layersToPop = 7 - layerToEngage
-        if layersToPop < 0:
-            print("layer to engage cannot be greater than 7")
-            exit()
-        for i in range(layersToPop):
-            model_conv.pop()
+        if weights:
+            model_conv.load_weights(weights, by_name=True)
+            # do freezing
+            for i in range(len(model_conv.layers)):
+                model_conv.layers[i].trainable = False
+        else:
+            # do engagement
+            layersToPop = 7 - layerToEngage
+            if layersToPop < 0:
+                print("layer to engage cannot be greater than 7")
+                exit()
+            for i in range(layersToPop):
+                model_conv.pop()
         print(model_conv.summary())
         model = Sequential()
         model.add(model_conv)
@@ -174,14 +178,14 @@ for i in range(nbBaseBatches):
 C0Weights = "C0_weigths_{0}.h5".format(drift_type)
 model_C0.save_weights(C0Weights)
 
-model_E = build_model("E", C0Weights)
-model_P = build_model("P", C0Weights)
-model_ms = build_model("E", C0Weights)
-model_freezing = make_conv_model(64, False)
-model_freezing.load_weights(C0Weights)
-freeze_model(model_freezing)
-model_freezing.compile(loss='categorical_crossentropy', 
-                optimizer='adadelta', metrics=['categorical_accuracy'])
+model_E = build_model("E", "")
+model_P = build_model("P", "")
+model_ms = build_model("E", "")
+model_freezing = build_model("P", C0Weights) #make_conv_model(64, False)
+#model_freezing.load_weights(C0Weights)
+#freeze_model(model_freezing)
+#model_freezing.compile(loss='categorical_crossentropy', 
+#                optimizer='adadelta', metrics=['categorical_accuracy'])
 
 # adaption: data changed
 angle = 0 # for rotate
