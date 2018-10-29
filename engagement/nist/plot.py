@@ -53,7 +53,7 @@ def plot_Ei_n(drift_type):
 
 def plot_one_npz(fileName, drift_type):
     data = np.load(fileName)
-    begin = 0
+    begin = 10
     indices = data["indices"][begin:]
     # accArray_Base = data["accBase"]
     # accArray_E = data["accE"]
@@ -73,9 +73,9 @@ def plot_one_npz(fileName, drift_type):
     plt.legend()
     plt.show()
 
-# drift_type = "transfer"
-# layer = 4
-# plot_one_npz("nist_engage_{0}_{1}.npz".format(drift_type, layer), drift_type)
+drift_type = "flip"
+layer = 4
+plot_one_npz("nist_engage_{0}_{1}_weights.npz".format(drift_type, layer), drift_type)
 
 def plot_engagement(drift_type):
     acc_list = []
@@ -92,7 +92,7 @@ def plot_engagement(drift_type):
     plt.legend()
     plt.show()
     
-plot_engagement("transfer")
+#plot_engagement("transfer")
 
 def calculate_metrics(inputFile, outputFile, cp):
     data = np.load(inputFile)

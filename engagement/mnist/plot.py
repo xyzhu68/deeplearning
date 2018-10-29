@@ -66,9 +66,9 @@ def plot_one_npz(fileName, drift_type):
     plt.legend()
     plt.show()
 
-# drift_type = "transfer"
-# layer = 7
-# plot_one_npz("mnist_engage_{0}_{1}.npz".format(drift_type, layer), drift_type)
+drift_type = "flip"
+layer = 7
+plot_one_npz("mnist_engage_{0}_{1}_old.npz".format(drift_type, layer), drift_type)
 
 def plot_engagement(drift_type):
     acc_list = []
@@ -85,7 +85,7 @@ def plot_engagement(drift_type):
     plt.legend()
     plt.show()
     
-plot_engagement("rotate")
+#plot_engagement("rotate")
 
 def calculate_metrics(inputFile, outputFile, cp):
     data = np.load(inputFile)

@@ -96,7 +96,7 @@ def make_vgg_model(Ei):
 beginTime = datetime.datetime.now()
 
 # prepare data
-train_data_dir = os.path.abspath("../../../dog_monkey") 
+train_data_dir = os.path.abspath("../../data/dog_monkey") 
 train_datagen = ImageDataGenerator(rescale=1. / 255,
     rotation_range=20,
     width_shift_range=0.2,
