@@ -21,8 +21,7 @@ config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
 sess = tf.Session(config=config)
 
-filepath_train = "train.arff"
-#filepath_test = "test.arff"
+
 
 #check arguments
 nbArgs = len(sys.argv)
@@ -287,7 +286,7 @@ for i in range(nbBaseBatches, nbBatches):
 endTime = datetime.datetime.now()
 print(endTime - beginTime)
 
-npFileName = "nist_engage_{0}_{1}_weights.npz".format(drift_type, blockToEngage)
+npFileName = "nist_engage_{0}_{1}_weighted.npz".format(drift_type, blockToEngage)
 np.savez(npFileName, accBase = accArray_Base,
                      accBaseUpdated = accArray_Base_Updated,
                      accE = accArray_E,

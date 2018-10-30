@@ -300,7 +300,7 @@ for i in range(nbBaseBatches, nbBatches):
 endTime = datetime.datetime.now()
 print(endTime - beginTime)
 
-npFileName = "mnist_engage_{0}_{1}.npz".format(drift_type, layerToEngage)
+npFileName = "mnist_engage_{0}_{1}_weighted.npz".format(drift_type, layerToEngage)
 np.savez(npFileName, accBase = accArray_Base,
                      accBaseUpdated = accArray_Base_Updated,
                      accE = accArray_E,
