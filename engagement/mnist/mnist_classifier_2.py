@@ -84,7 +84,11 @@ def build_model(model_type, weights, freezing):
         if freezing:
             # do freezing
             for i in range(len(model_conv.layers)):
-                model_conv.layers[i].trainable = False
+                if i < layerToEngage:
+                    model_conv.layers[i].trainable = False
+                    print("frozen layer {0}".format(model_conv.layers[i].name))
+                else:
+                    print("free layer {0}".format(model_conv.layers[i].name))
         else:
             # do engagement
             layersToPop = 7 - layerToEngage
@@ -183,10 +187,6 @@ model_E = build_model("E", C0Weights, False)
 model_P = build_model("P", C0Weights, False)
 model_ms = build_model("E", C0Weights, False)
 model_freezing = build_model("P", C0Weights, True) #make_conv_model(64, False)
-#model_freezing.load_weights(C0Weights)
-#freeze_model(model_freezing)
-#model_freezing.compile(loss='categorical_crossentropy', 
-#                optimizer='adadelta', metrics=['categorical_accuracy'])
 
 # adaption: data changed
 angle = 0 # for rotate
