@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
 from datetime import datetime, timedelta
+from scipy.stats import rankdata
 
 def plot_Ei_n(drift_type):
     d0 = np.load("mnist_drift_{0}_resnet_fs.npz".format(drift_type))
@@ -73,9 +74,9 @@ def plot_one_npz(fileName, drift_type):
     plt.legend()
     plt.show()
 
-drift_type = "flip"
-layer = 4
-plot_one_npz("nist_engage_{0}_{1}_weights.npz".format(drift_type, layer), drift_type)
+# drift_type = "flip"
+# layer = 4
+# plot_one_npz("nist_engage_{0}_{1}_weights.npz".format(drift_type, layer), drift_type)
 
 def plot_engagement(drift_type):
     acc_list = []
@@ -133,7 +134,8 @@ def calculate_metrics(inputFile, outputFile, cp):
         index = 0
         targetAcc = finalAcc[i]
         for j in range(cp, len(item)):
-            if item[j] >= 0.9 and np.mean(item[j:j+5]) >= 0.9: #targetAcc:
+            #if item[j] >= 0.9 and np.mean(item[j:j+5]) >= 0.9: #targetAcc:
+            if item[j] >= 0.9 * targetAcc:
                 index = j
                 break
         line = "{0}: {1}".format(titles[i], index - cp)
@@ -160,7 +162,10 @@ def calculate_metrics(inputFile, outputFile, cp):
     # final rank
     of.write("Final rank\n")
     ranks = [0, 0, 0, 0, 0]
-    for i in range(80-finalBatch, 80):
+    nbBatches = 80
+    if cp == 0: # appear
+        nbBatches = 70
+    for i in range(nbBatches-finalBatch, nbBatches):
         acc_at_i = []
         for j in range(5):
             acc_at_i.append(acc[j][i])
@@ -183,7 +188,10 @@ def calculate_metrics(inputFile, outputFile, cp):
         item = acc[i]
         avgAcc = np.mean(item[-30:])
         total = 0
-        for j in range(50, 80):
+        rg = range(50, 80)
+        if cp == 0: # appear
+            rg = range(40, 70)
+        for j in rg:
             total += abs(item[j] - avgAcc)
         line = "{0}: {1}".format(titles[i], total / 30)
         of.write(line + "\n")
@@ -191,4 +199,9 @@ def calculate_metrics(inputFile, outputFile, cp):
 
     of.close()
 
-#calculate_metrics("nist_engage_rotate_7.npz", "rotate_metrics.txt", 50-20)  # 50 - 20 
+drift_type = "transfer"
+changePoint = 30 # 50 - 20
+if drift_type == "appear":
+    changePoint = 0
+calculate_metrics("random_patching/nist_engage_{0}_4.npz".format(drift_type), 
+                    "result_random/{0}_metrics.txt".format(drift_type), changePoint)  # 50 - 20 

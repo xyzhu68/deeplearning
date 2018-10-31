@@ -36,7 +36,7 @@ drift_type = sys.argv[1]
 
 # settings
 img_size = 150
-gen_batch_size = 200
+gen_batch_size = 300
 epochs = 10
 nbClasses = 20
 
