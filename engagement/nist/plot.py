@@ -74,9 +74,9 @@ def plot_one_npz(fileName, drift_type):
     plt.legend()
     plt.show()
 
-# drift_type = "flip"
-# layer = 4
-# plot_one_npz("nist_engage_{0}_{1}_weights.npz".format(drift_type, layer), drift_type)
+drift_type = "flip"
+layer = 4
+plot_one_npz("nist_engage_{0}_{1}_batchNorm.npz".format(drift_type, layer), drift_type)
 
 def plot_engagement(drift_type):
     acc_list = []
@@ -199,9 +199,9 @@ def calculate_metrics(inputFile, outputFile, cp):
 
     of.close()
 
-drift_type = "transfer"
-changePoint = 30 # 50 - 20
-if drift_type == "appear":
-    changePoint = 0
-calculate_metrics("random_patching/nist_engage_{0}_4.npz".format(drift_type), 
-                    "result_random/{0}_metrics.txt".format(drift_type), changePoint)  # 50 - 20 
+# drift_type = "transfer"
+# changePoint = 30 # 50 - 20
+# if drift_type == "appear":
+#     changePoint = 0
+# calculate_metrics("random_patching/nist_engage_{0}_4.npz".format(drift_type), 
+#                     "result_random/{0}_metrics.txt".format(drift_type), changePoint)  # 50 - 20 

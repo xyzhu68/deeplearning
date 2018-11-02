@@ -21,8 +21,6 @@ config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
 sess = tf.Session(config=config)
 
-filepath_train = "train.arff"
-#filepath_test = "test.arff"
 
 #check arguments
 nbArgs = len(sys.argv)
@@ -95,11 +93,14 @@ def build_model(model_type, weights):
             model_conv.pop()
     model = Sequential()
     model.add(model_conv)
+    model.add(Dropout(0.5)) # changed
     model.add(Flatten(name="Flatten"))
 
     model.add(Dense(512))
+    if model_type == "P":
+        model.add(BatchNormalization()) # changed
     model.add(Activation('relu'))
-    model.add(Dropout(0.5))
+    model.add(Dropout(0.25))
     if model_type == "E":
         model.add(Dense(1, name="Ei_dense1"))
         model.add(Activation('sigmoid', name="Ei_act"))
@@ -137,7 +138,7 @@ if drift_type == "appear":
     nbBaseBatches = 30
 
 # prepare data
-train_data_dir = os.path.abspath("../../data/NIST")
+train_data_dir = os.path.abspath("../../../NIST")
 train_datagen = ImageDataGenerator(rescale=1. / 255)
 train_generator = train_datagen.flow_from_directory(
     train_data_dir,
