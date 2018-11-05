@@ -89,7 +89,7 @@ def remap(X, y, firstHalf):
         y_array = to_categorical(y_array, nbClasses)
         x_array = np.asarray(x_array)
         x_array = x_array.reshape(-1, img_size, img_size, 3)
-        y_array = to_categorical(y_array, nbClasses)
+        #y_array = to_categorical(y_array, nbClasses)
         return (x_array, y_array, y_array_E)
 
 # def rot(X,y, angle):

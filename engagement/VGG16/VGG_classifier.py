@@ -30,11 +30,6 @@ if nbArgs < 2:
     exit()
 drift_type = sys.argv[1]
 
-if nbArgs < 3:
-    print("Please define the block number for engagement")
-    exit()
-blockNumber = int(sys.argv[2])
-
 # nbFreeze = -1
 # if nbArgs > 2:
 #     nbFreeze = int(sys.argv[2])
@@ -68,7 +63,7 @@ def calc_accuracy(modelC0, modelEi, modelCi, X, y):
         index += 1
     return correct / len(X)
 
-def make_C0_model():
+def make_vgg_model(Ei):
     input_tensor = Input(shape=(img_size,img_size,3))
     base_model = applications.VGG16(include_top=False, weights='imagenet', input_tensor=input_tensor)
     #print(base_model.summary())
@@ -77,58 +72,15 @@ def make_C0_model():
     fc_model.add(Flatten(input_shape=base_model.output_shape[1:]))
     fc_model.add(Dense(256, activation='relu'))
     fc_model.add(Dropout(0.5))
-    fc_model.add(Dense(nbClasses, activation='softmax'))
+    if Ei:
+        fc_model.add(Dense(1, activation='sigmoid'))
+    else:
+        fc_model.add(Dense(nbClasses, activation='softmax'))
 
     # add the model on the convolutional base
     model = Model(inputs=base_model.input, outputs=fc_model(base_model.output))
     for layer in model.layers[:15]:
         layer.trainable = False
-
-    model.compile(loss='categorical_crossentropy',
-                        optimizer=optimizers.SGD(lr=1e-4, momentum=0.9),
-                        metrics=['categorical_accuracy'])
-        
-
-    return model
-
-def make_vgg_model(Ei):
-    input_tensor = Input(shape=(img_size,img_size,3))
-    base_model = applications.VGG16(include_top=False, weights='imagenet', input_tensor=input_tensor)
-    #print(base_model.summary())
-
-    for layer in base_model.layers:
-        layer.trainable = False
-    popDict = {1: 15, 2: 12, 3: 8, 4: 4, 5: 0}
-    layersToPop = popDict[blockNumber]
-    for i in range(layersToPop):
-        base_model.layers.pop()
-
-    print(base_model.layers[-1].output_shape[1:])
-    print(base_model.layers[-1].output_shape[1:][2])
-
-    nbFilter = base_model.layers[-1].output_shape[1:][2]
-    patch_model = Sequential()
-    # add conv-block in patching-network
-    patch_model.add(Conv2D(nbFilter, (3, 3), activation="relu", 
-                            input_shape=base_model.layers[-1].output_shape[1:]))
-    patch_model.add(Conv2D(nbFilter, (3, 3), activation="relu"))
-    patch_model.add(Conv2D(nbFilter, (3, 3), activation="relu"))
-    patch_model.add(MaxPooling2D(pool_size=(2, 2)))
-    # conv-block end
-    #patch_model.add(Flatten(input_shape=base_model.layers[-1].output_shape[1:]))
-    patch_model.add(Flatten())
-    patch_model.add(Dense(256, activation='relu'))
-    patch_model.add(Dropout(0.5))
-    if Ei:
-        patch_model.add(Dense(1, activation='sigmoid'))
-    else:
-        patch_model.add(Dense(nbClasses, activation='softmax'))
-
-    # add the model on the convolutional base
-    model = Model(inputs=base_model.input, outputs=patch_model(base_model.layers[-1].output))
-    # for layer in model.layers[:19]:
-    #     layer.trainable = False # freeze all VGG16 conv-block-layers
-    print(model.summary())
 
     if Ei:
         model.compile(loss='binary_crossentropy',
@@ -160,8 +112,7 @@ train_generator = train_datagen.flow_from_directory(
     batch_size=gen_batch_size,
     class_mode="categorical")
 
-model_C0 = make_C0_model()
-#exit() # !!!!!!!!!!!!!!!!!!!!!!!!!!!
+model_C0 = make_vgg_model(False)
 
 #lossArray_E = []
 accArray_E = []
@@ -191,7 +142,16 @@ for i in range(nbBaseBatches):
         print("Unknown drift type")
         exit()
 
-    model_C0.fit(X, y, batch_size=bz, epochs = epochs)
+    history = model_C0.fit(X, y, batch_size=bz, epochs = epochs)
+    # accArray_Base.append(np.mean(history.history["categorical_accuracy"]))
+    # lossArray_Base.append(np.mean(history.history["loss"]))
+    # indices.append(i)
+
+    # lossArray_E.append(None)
+    # accArray_E.append(None)
+    # lossArray_P.append(None)
+    # accArray_P.append(None)
+    # accEiPi.append(None)
 
 
 model_P = make_vgg_model(False)
@@ -269,7 +229,7 @@ for i in range(nbBaseBatches, nbBatches):
 endTime = datetime.datetime.now()
 print(endTime - beginTime)
 
-npFileName = "vgg_{0}_{1}.npz".format(drift_type, blockNumber)
+npFileName = "vgg_{0}.npz".format(drift_type)
 np.savez(npFileName, accBase = accArray_Base,
                      accE = accArray_E,
                      accP = accArray_P,

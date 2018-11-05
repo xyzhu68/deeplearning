@@ -66,7 +66,6 @@ def plot_one_npz(fileName, drift_type):
     plt.plot(indices, data["accFreezing"][begin:], label="Freezing")
     plt.plot(indices, data["accBase"][begin:], label="Base line")
     plt.plot(indices, data["accEiPi"][begin:], label = "NN-Patching")
-    #plt.plot(indices, data["accP"][begin:], label = "Ci")
     plt.plot(indices, data["accMSPi"][begin:], label = "NN-Patching ms")
     plt.title("NIST - {0}".format(drift_type))
     plt.ylabel("Accuracy")
@@ -76,7 +75,7 @@ def plot_one_npz(fileName, drift_type):
 
 drift_type = "flip"
 layer = 4
-plot_one_npz("nist_engage_{0}_{1}_batchNorm.npz".format(drift_type, layer), drift_type)
+plot_one_npz("nist_engage_{0}_{1}.npz".format(drift_type, layer), drift_type)
 
 def plot_engagement(drift_type):
     acc_list = []

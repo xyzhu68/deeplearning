@@ -5,7 +5,7 @@ from keras.layers.convolutional import Conv2D, MaxPooling2D
 from keras.layers import Input, Dense, Activation, Dropout, Flatten
 from keras.utils import to_categorical
 from keras.preprocessing.image import ImageDataGenerator
-from keras import backend as K
+from keras import optimizers, backend as K
 import sys
 import os
 import matplotlib.pyplot as plt
@@ -93,18 +93,21 @@ def build_model(model_type, weights):
             model_conv.pop()
     model = Sequential()
     model.add(model_conv)
-    model.add(Dropout(0.5)) # changed
+    #model.add(Dropout(0.5)) # changed
     model.add(Flatten(name="Flatten"))
 
     model.add(Dense(512))
-    if model_type == "P":
-        model.add(BatchNormalization()) # changed
+    #if model_type == "P":
+    model.add(BatchNormalization(momentum=0.9)) # changed
     model.add(Activation('relu'))
     model.add(Dropout(0.25))
     if model_type == "E":
         model.add(Dense(1, name="Ei_dense1"))
         model.add(Activation('sigmoid', name="Ei_act"))
-        model.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['binary_accuracy'])
+        #model.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['binary_accuracy'])
+        #changed
+        sgd = optimizers.SGD(lr=0.001)
+        model.compile(loss='binary_crossentropy', optimizer=sgd, metrics=['binary_accuracy'])
     elif model_type == "P":
         model.add(Dense(36))
         model.add(Activation('softmax'))
@@ -138,7 +141,7 @@ if drift_type == "appear":
     nbBaseBatches = 30
 
 # prepare data
-train_data_dir = os.path.abspath("../../../NIST")
+train_data_dir = os.path.abspath("../../data/NIST")
 train_datagen = ImageDataGenerator(rescale=1. / 255)
 train_generator = train_datagen.flow_from_directory(
     train_data_dir,
