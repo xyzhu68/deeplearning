@@ -93,7 +93,7 @@ def build_model(model_type, weights):
             model_conv.pop()
     model = Sequential()
     model.add(model_conv)
-    #model.add(Dropout(0.5)) # changed
+    model.add(Dropout(0.5)) # changed
     model.add(Flatten(name="Flatten"))
 
     model.add(Dense(512))
@@ -141,7 +141,7 @@ if drift_type == "appear":
     nbBaseBatches = 30
 
 # prepare data
-train_data_dir = os.path.abspath("../../data/NIST")
+train_data_dir = os.path.abspath("../../../NIST")
 train_datagen = ImageDataGenerator(rescale=1. / 255)
 train_generator = train_datagen.flow_from_directory(
     train_data_dir,

@@ -73,7 +73,7 @@ def plot_one_npz(fileName, drift_type):
     plt.legend()
     plt.show()
 
-drift_type = "flip"
+drift_type = "transfer"
 layer = 4
 plot_one_npz("nist_engage_{0}_{1}.npz".format(drift_type, layer), drift_type)
 
