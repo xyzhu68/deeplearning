@@ -22,13 +22,13 @@ def plot_one_npz(fileName, drift_type):
     # plt.plot(indices, data["accE"][begin:], label="Ei")
     # plt.plot(indices, data["accMS"][begin:], label="MS")
     # plt.plot(indices, data["accP"][begin:], label="Pi")
-    plt.title("VGG - {0}".format(drift_type))
+    plt.title("Dog-Monkey (VGG16) - {0}".format(drift_type))
     plt.ylabel("Accuracy")
     plt.xlabel("Batch")
     plt.legend()
     plt.show()
 
-drift_type = "remap"
-layer = 1
+drift_type = "appear"
+layer = 3
 plot_one_npz("vgg_{0}_{1}.npz".format(drift_type, layer), drift_type)
-#plot_one_npz("vgg_remap_base.npz", drift_type)
+#plot_one_npz("vgg_{0}_base.npz".format(drift_type), drift_type)
