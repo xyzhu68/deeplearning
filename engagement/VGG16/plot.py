@@ -28,7 +28,7 @@ def plot_one_npz(fileName, drift_type):
     plt.legend()
     plt.show()
 
-drift_type = "appear"
-layer = 3
+drift_type = "remap"
+layer = 1
 plot_one_npz("vgg_{0}_{1}.npz".format(drift_type, layer), drift_type)
 #plot_one_npz("vgg_{0}_base.npz".format(drift_type), drift_type)

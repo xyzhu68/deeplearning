@@ -73,9 +73,9 @@ def plot_one_npz(fileName, drift_type):
     plt.legend()
     plt.show()
 
-drift_type = "transfer"
-layer = 4
-plot_one_npz("nist_engage_{0}_{1}.npz".format(drift_type, layer), drift_type)
+# drift_type = "transfer"
+# layer = 4
+# plot_one_npz("nist_engage_{0}_{1}.npz".format(drift_type, layer), drift_type)
 
 def plot_engagement(drift_type):
     acc_list = []
@@ -204,3 +204,62 @@ def calculate_metrics(inputFile, outputFile, cp):
 #     changePoint = 0
 # calculate_metrics("random_patching/nist_engage_{0}_4.npz".format(drift_type), 
 #                     "result_random/{0}_metrics.txt".format(drift_type), changePoint)  # 50 - 20 
+
+
+def optimization():
+    flip = np.load("random_patching/nist_engage_flip_4.npz")
+    flip_op = np.load("nist_engage_flip_4.npz")
+
+    rotate = np.load("random_patching/nist_engage_rotate_4.npz")
+    rotate_op = np.load("nist_engage_rotate_4.npz")
+
+    appear = np.load("random_patching/nist_engage_appear_4.npz")
+    appear_op = np.load("nist_engage_appear_4.npz")
+
+    remap = np.load("random_patching/nist_engage_remap_4.npz")
+    remap_op = np.load("nist_engage_remap_4.npz")
+
+    transfer = np.load("random_patching/nist_engage_transfer_4.npz")
+    transfer_op = np.load("nist_engage_transfer_4.npz")
+
+    nbFinalBatches = 5
+    key = "accMSPi"
+
+    orgData = [flip[key], rotate[key], appear[key], remap[key], transfer[key]]
+    optData = [flip_op[key], rotate_op[key], appear_op[key], remap_op[key], transfer_op[key]]
+    orgAcc = []
+    optAcc = []
+    for i in range(5):
+        acc = np.mean(orgData[i][-nbFinalBatches:])
+        orgAcc.append(acc)
+        accOp = np.mean(optData[i][-nbFinalBatches:])
+        optAcc.append(accOp)
+
+    print(orgAcc)
+    print(optAcc)
+
+    fig, ax = plt.subplots()
+
+    index = np.arange(5)
+    bar_width = 0.35
+    opacity = 0.4
+
+    rects1 = ax.bar(index, orgAcc, bar_width,
+                alpha=opacity, color='b',
+                label='normal')
+
+    rects2 = ax.bar(index + bar_width, optAcc, bar_width,
+                alpha=opacity, color='r',
+                label='optimized')
+
+    ax.set_xlabel('Data Change Variant')
+    ax.set_ylabel('Final Accuracy')
+    ax.set_title('Optimization of patching')
+    ax.set_xticks(index + bar_width / 2)
+    ax.set_xticklabels(('flip', 'rotate', 'appear', 'remap', 'transfer'))
+    ax.legend()
+
+    fig.tight_layout()
+    plt.show()
+
+optimization()
