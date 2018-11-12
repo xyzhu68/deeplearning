@@ -257,7 +257,7 @@ def optimization():
     ax.set_title('Optimization of patching')
     ax.set_xticks(index + bar_width / 2)
     ax.set_xticklabels(('flip', 'rotate', 'appear', 'remap', 'transfer'))
-    ax.legend()
+    ax.legend(loc='center right', bbox_to_anchor=(0.99, 0.5))
 
     fig.tight_layout()
     plt.show()
