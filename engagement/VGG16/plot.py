@@ -30,5 +30,26 @@ def plot_one_npz(fileName, drift_type):
 
 drift_type = "remap"
 layer = 1
-plot_one_npz("vgg_{0}_{1}.npz".format(drift_type, layer), drift_type)
-#plot_one_npz("vgg_{0}_base.npz".format(drift_type), drift_type)
+plot_one_npz("vgg_{0}_{1}_simple.npz".format(drift_type, layer), drift_type)
+#plot_one_npz("vgg_{0}_FC.npz".format(drift_type), drift_type)
+
+def plot_engagement(drift_type):
+    acc_list = []
+    for i in range(4):
+        file = "vgg_{0}_{1}.npz".format(drift_type, i+1)
+        data = np.load(file)
+        final_acc = data["accMSPi"][-5]
+        acc_list.append(np.mean(final_acc))
+
+    ft_data = np.load("vgg_{0}_base.npz".format(drift_type))
+    ft_acc = ft_data["accMSPi"][-5]
+    acc_list.append(np.mean(ft_acc))
+
+    plt.plot(["1", "2", "3", "4", "fine-tuning"], acc_list, marker="s")
+    plt.title("Dog-Monkdy (VGG) - Engagement (ms) - {0}".format(drift_type))
+    plt.ylabel("Accuracy")
+    plt.xlabel("Engagement Block")
+    #plt.legend()
+    plt.show()
+    
+#plot_engagement("transfer")
