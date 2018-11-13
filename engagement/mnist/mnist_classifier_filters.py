@@ -133,8 +133,8 @@ nbBatches = 100 # devide dataset into 100 batches
 nbBaseBatches = 20 # size of base dataset
 sizeOneBatch = totalDataSize // nbBatches
 
-model_C0 = make_conv_model(64, False)
-model_Base_Updated = make_conv_model(64, False)
+model_C0 = make_conv_model(nbFilters, False)
+#model_Base_Updated = make_conv_model(64, False)
 
 
 #lossArray_E = [] # loss of Ei
@@ -181,7 +181,7 @@ model_C0.save_weights(C0Weights)
 model_E = build_model("E", "")
 model_P = build_model("P", "")
 model_ms = build_model("E", "")
-model_freezing = build_model("P", C0Weights) #make_conv_model(64, False)
+#model_freezing = build_model("P", C0Weights) #make_conv_model(64, False)
 #model_freezing.load_weights(C0Weights)
 #freeze_model(model_freezing)
 #model_freezing.compile(loss='categorical_crossentropy', 
@@ -299,7 +299,7 @@ for i in range(nbBaseBatches, nbBatches):
 endTime = datetime.datetime.now()
 print(endTime - beginTime)
 
-npFileName = "filters/mnist_engage_{0}_{1}.npz".format(drift_type, layerToEngage)
+npFileName = "filters/mnist_filters_{0}_{1}.npz".format(drift_type, nbFilters)
 np.savez(npFileName, accBase = accArray_Base,
                     #  accBaseUpdated = accArray_Base_Updated,
                      accE = accArray_E,

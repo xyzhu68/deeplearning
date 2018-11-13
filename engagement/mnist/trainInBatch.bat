@@ -37,4 +37,22 @@ REM python mnist_classifier_2.py transfer 3
 REM python mnist_classifier_2.py transfer 2
 REM python mnist_classifier_2.py transfer 1
 
-python mnist_classifier_filters.py flip 16
+python mnist_classifier_filters.py rotate 16
+python mnist_classifier_filters.py rotate 32
+python mnist_classifier_filters.py rotate 64
+python mnist_classifier_filters.py rotate 128
+
+python mnist_classifier_filters.py appear 16
+python mnist_classifier_filters.py appear 32
+python mnist_classifier_filters.py appear 64
+python mnist_classifier_filters.py appear 128
+
+python mnist_classifier_filters.py remap 16
+python mnist_classifier_filters.py remap 32
+python mnist_classifier_filters.py remap 64
+python mnist_classifier_filters.py remap 128
+
+python mnist_classifier_filters.py transfer 16
+python mnist_classifier_filters.py transfer 32
+python mnist_classifier_filters.py transfer 64
+python mnist_classifier_filters.py transfer 128

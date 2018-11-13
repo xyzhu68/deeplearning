@@ -66,9 +66,9 @@ def plot_one_npz(fileName, drift_type):
     plt.legend()
     plt.show()
 
-drift_type = "remap"
-layer = 7
-plot_one_npz("mnist_engage_{0}_{1}.npz".format(drift_type, layer), drift_type)
+# drift_type = "remap"
+# layer = 7
+# plot_one_npz("mnist_engage_{0}_{1}.npz".format(drift_type, layer), drift_type)
 
 def plot_engagement(drift_type):
     acc_list = []
@@ -185,3 +185,49 @@ def calculate_metrics(inputFile, outputFile, cp):
     of.close()
 
 #calculate_metrics("mnist_engage_rotate_7.npz", "rotate_metrics.txt", 50-20)  # 50 - 20 
+
+def plot_filters(drift_type):
+    data16 = np.load("filters/mnist_filters_{0}_16.npz".format(drift_type))
+    data32 = np.load("filters/mnist_filters_{0}_32.npz".format(drift_type))
+    data64 = np.load("filters/mnist_filters_{0}_64.npz".format(drift_type))
+    data128 = np.load("filters/mnist_filters_{0}_128.npz".format(drift_type))
+    
+    data = [data16, data32, data64, data128]
+    accs = []
+    for i in range(4):
+        accs.append(np.mean(data[i]["accMSPi"][-20]))
+
+    x = np.array([0,1,2,3])
+    xticks = ["16", "32", "64", "128"]
+    plt.xticks(x, xticks)
+    plt.plot(x, accs, marker="s")
+    plt.ylabel("Accuracy")
+    plt.xlabel("Filters")
+    #plt.legend()
+    plt.show()
+
+plot_filters("flip")
+
+def plot_filter_time(drift_type):
+    data16 = np.load("filters/mnist_filters_{0}_16.npz".format(drift_type))
+    data32 = np.load("filters/mnist_filters_{0}_32.npz".format(drift_type))
+    data64 = np.load("filters/mnist_filters_{0}_64.npz".format(drift_type))
+    data128 = np.load("filters/mnist_filters_{0}_128.npz".format(drift_type))
+    
+    data = [data16, data32, data64, data128]
+    times = []
+    for i in range(4):
+        d_str = data[i]["duration"]
+        t = datetime.strptime(str(d_str).split(".")[0],"%H:%M:%S")
+        delta = timedelta(hours=t.hour, minutes=t.minute, seconds=t.second)
+        times.append(delta.total_seconds())
+
+    x = np.array([0,1,2,3])
+    xticks = ["16", "32", "64", "128"]
+    plt.xticks(x, xticks)
+    plt.plot(x, times, marker="s")
+    plt.xlabel("Filters")
+    plt.ylabel("Running time")
+    plt.show()
+
+#plot_filter_time("flip")
