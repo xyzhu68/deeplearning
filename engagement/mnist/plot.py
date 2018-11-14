@@ -195,7 +195,7 @@ def plot_filters(drift_type):
     data = [data16, data32, data64, data128]
     accs = []
     for i in range(4):
-        accs.append(np.mean(data[i]["accMSPi"][-20]))
+        accs.append(np.mean(data[i]["accMSPi"][-40:]))
 
     x = np.array([0,1,2,3])
     xticks = ["16", "32", "64", "128"]
@@ -206,7 +206,7 @@ def plot_filters(drift_type):
     #plt.legend()
     plt.show()
 
-plot_filters("flip")
+#plot_filters("rotate")
 
 def plot_filter_time(drift_type):
     data16 = np.load("filters/mnist_filters_{0}_16.npz".format(drift_type))
@@ -230,4 +230,4 @@ def plot_filter_time(drift_type):
     plt.ylabel("Running time")
     plt.show()
 
-#plot_filter_time("flip")
+plot_filter_time("rotate")
