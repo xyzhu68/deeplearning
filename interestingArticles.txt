@@ -7,7 +7,8 @@ resnet:
 https://github.com/codekansas/keras-resnet resnet
 https://medium.com/@14prakash/understanding-and-implementing-architectures-of-resnet-and-resnext-for-state-of-the-art-image-cf51669e1624
 
-https://ankivil.com/mnist-database-and-simple-classification-networks/ MLP(full-connected)
+MLP(full-connected):
+https://ankivil.com/mnist-database-and-simple-classification-networks/ 
 
 CNN fine-tuning:
 http://vashishtm.net/pdf/practices-fine-tuning.pdf
@@ -15,3 +16,6 @@ https://flyyufelix.github.io/2016/10/03/fine-tuning-in-keras-part1.html
 
 Engagement
 http://papers.nips.cc/paper/5347-how-transferable-are-features-in-deep-neural-networks.pdf
+
+Learning rate:
+https://towardsdatascience.com/understanding-learning-rates-and-how-it-improves-performance-in-deep-learning-d0d4059c1c10
