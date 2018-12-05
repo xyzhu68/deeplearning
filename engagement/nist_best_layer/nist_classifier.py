@@ -14,6 +14,7 @@ import datetime
 
 from data_provider import *
 from model_provider import *
+import random # TEST
 
 # settings for GPU
 import tensorflow as tf
@@ -100,7 +101,7 @@ def build_model(model_type, weights, nbFilters, layerToEngage):
 
 #  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-def Run_one_engagement(drift_type, layerToEngage):
+def Run_one_engagement___(drift_type, layerToEngage):
 
     beginTime = datetime.datetime.now()
 
@@ -258,6 +259,9 @@ def Run_one_engagement(drift_type, layerToEngage):
                         indices=indices,
                         duration=str(endTime - beginTime))
 
-Run_one_engagement("flip", 12)
+#Run_one_engagement("flip", 12)
+
+def Run_one_engagement(drift_type, layerToEngage):
+    return random.uniform(0, 1)
 
 
