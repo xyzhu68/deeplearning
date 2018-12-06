@@ -1,4 +1,4 @@
-from scipy.io import arff
+
 import numpy as np
 from keras.models import load_model, Model, Sequential
 from keras.layers.convolutional import Conv2D, MaxPooling2D
@@ -131,18 +131,18 @@ def Run_one_engagement___(drift_type, layerToEngage):
     model_C0 = make_conv_model(nbFilters, False)
 
 
-    accArray_E = [] # accuracy of Ei
+    # accArray_E = [] # accuracy of Ei
     accArray_P = [] # accuracy of Pi
     accArray_MS = []
     indices = [] # index of batches
-    accArray_Base = [] # accuray of C0 (base model)
+    # accArray_Base = [] # accuray of C0 (base model)
     # accEiPi = [] # accuracy of Ei + Pi
     accMSPi = [] # accuracy of Model Selector + P
 
 
     # training in base phase
-    #for i in range(nbBaseBatches):
-    for i in range(1): # !!!!!!!!!!!!
+    for i in range(nbBaseBatches):
+    #for i in range(1): # !!!!!!!!!!!!
         print(i)
         X, y = train_generator.next()
 
@@ -204,14 +204,14 @@ def Run_one_engagement___(drift_type, layerToEngage):
         # y_Ei = []
         x_ms = []
         y_ms = []
-        base_correct = 0
+        # base_correct = 0
         for index in range(len(X)):
             predictC0 = model_C0.predict(X[index].reshape(1, img_size, img_size, 1), batch_size=1)
             predictP = model_P.predict(X[index].reshape(1, img_size, img_size, 1), batch_size=1)
-            if np.argmax(predictC0) == np.argmax(y[index]):
+            # if np.argmax(predictC0) == np.argmax(y[index]):
                 # x_Ei.append(X[index])
                 # y_Ei.append(0)
-                base_correct += 1
+                # base_correct += 1
             # else:
             #     x_Ei.append(X[index])
             #     y_Ei.append(1)
@@ -243,21 +243,23 @@ def Run_one_engagement___(drift_type, layerToEngage):
         
         indices.append(i)
 
-        accArray_Base.append(base_correct / len(X))
+        # accArray_Base.append(base_correct / len(X))
         
     
     endTime = datetime.datetime.now()
     print(endTime - beginTime)
 
     npFileName = "nist_engage_{0}_{1}.npz".format(drift_type, layerToEngage)
-    np.savez(npFileName, accBase = accArray_Base,
-                        accE = accArray_E,
+    np.savez(npFileName, # accE = accArray_E,
                         accMS = accArray_MS,
                         accP = accArray_P,
                         accMSPi = accMSPi,
                         # accEiPi = accEiPi,
                         indices=indices,
                         duration=str(endTime - beginTime))
+
+    finalAcc = np.mean(accMSPi[-5:])
+    return finalAcc
 
 #Run_one_engagement("flip", 12)
 

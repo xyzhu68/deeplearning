@@ -1,6 +1,6 @@
 import random
 import sys
-from nist_classifier import *
+from VGG_classifier_engage_simple import *
 
 #check arguments
 nbArgs = len(sys.argv)
@@ -10,7 +10,7 @@ if nbArgs < 2:
 drift_type = sys.argv[1]
 
 percent = 0.3 # 30%
-totalLayers = 12
+totalLayers = 18
 layers = list(range(totalLayers))
 
 topList = []
