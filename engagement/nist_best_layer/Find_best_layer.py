@@ -1,5 +1,6 @@
 import random
 import sys
+import datetime
 from nist_classifier import *
 
 #check arguments
@@ -12,6 +13,8 @@ drift_type = sys.argv[1]
 percent = 0.3 # 30%
 totalLayers = 12
 layers = list(range(totalLayers))
+
+beginTime = datetime.datetime.now()
 
 topList = []
 numberLayersEngaged = 0
@@ -48,4 +51,7 @@ while(len(layers) > 0):
     print("engageLayers: ", engageLayers)
     print("topList: ", topList)
 print("number of layers engaged: ", numberLayersEngaged)
+
+endTime = datetime.datetime.now()
+print(endTime - beginTime)
     

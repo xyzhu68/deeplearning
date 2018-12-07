@@ -101,7 +101,7 @@ def build_model(model_type, weights, nbFilters, layerToEngage):
 
 #  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-def Run_one_engagement___(drift_type, layerToEngage):
+def Run_one_engagement(drift_type, layerToEngage):
 
     beginTime = datetime.datetime.now()
 
@@ -119,7 +119,7 @@ def Run_one_engagement___(drift_type, layerToEngage):
         nbBaseBatches = 30
 
     # prepare data
-    train_data_dir = os.path.abspath("../../../NIST")
+    train_data_dir = os.path.abspath("../../data/NIST")
     train_datagen = ImageDataGenerator(rescale=1. / 255)
     train_generator = train_datagen.flow_from_directory(
         train_data_dir,
@@ -263,7 +263,7 @@ def Run_one_engagement___(drift_type, layerToEngage):
 
 #Run_one_engagement("flip", 12)
 
-def Run_one_engagement(drift_type, layerToEngage):
-    return random.uniform(0, 1)
+# def Run_one_engagement(drift_type, layerToEngage):
+#     return random.uniform(0, 1)
 
 
