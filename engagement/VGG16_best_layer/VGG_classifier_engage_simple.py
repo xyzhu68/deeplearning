@@ -7,6 +7,7 @@ from keras.utils import to_categorical
 from keras.preprocessing.image import ImageDataGenerator
 from keras import backend as K
 from keras import applications, optimizers
+from keras.layers.normalization import BatchNormalization
 import sys
 import os
 import matplotlib.pyplot as plt
@@ -84,7 +85,7 @@ def make_vgg_model(Ei, img_size, nbClasses, layersToEngage):
         layer.trainable = False
     # popDict = {1: 15, 2: 12, 3: 8, 4: 4, 5: 0}
     # layersToPop = popDict[blockNumber]
-    for i in range(layersToEngage):
+    for i in range(18-layersToEngage):
         base_model.layers.pop()
 
     nbFilter = base_model.layers[-1].output_shape[1:][2]
@@ -95,9 +96,12 @@ def make_vgg_model(Ei, img_size, nbClasses, layersToEngage):
 
     patch_model.add(MaxPooling2D(pool_size=(2, 2)))
     # conv-block end
-    patch_model.add(Flatten())
-    patch_model.add(Dense(256, activation='relu'))
     patch_model.add(Dropout(0.5))
+    patch_model.add(Flatten())
+    patch_model.add(Dense(256))
+    patch_model.add(BatchNormalization(momentum=0.9))
+    patch_model.add(Activation('relu'))
+    patch_model.add(Dropout(0.25))
     if Ei:
         patch_model.add(Dense(1, activation='sigmoid'))
     else:
@@ -173,7 +177,7 @@ def Run_one_engagement(drift_type, layersToEngage):
             print("Unknown drift type")
             exit()
 
-        model_C0.fit(X, y, batch_size=bz, epochs = epochs)
+        model_C0.fit(X, y, batch_size=bz, epochs = epochs, verbose=0)
 
 
     model_P = make_vgg_model(False, img_size, nbClasses, layersToEngage)
@@ -233,11 +237,11 @@ def Run_one_engagement(drift_type, layersToEngage):
         x_ms = x_ms.reshape(-1, img_size, img_size, 3)
         loss_ms, acc_ms = model_ms.evaluate(x_ms, y_ms, batch_size=bz)
         accArray_MS.append(acc_ms)
-        model_ms.fit(x_ms, y_ms, batch_size = bz, epochs = epochs)
+        model_ms.fit(x_ms, y_ms, batch_size = bz, epochs = epochs, verbose=0)
 
         loss_Pi, acc_Pi = model_P.evaluate(X, y, batch_size=bz)
         accArray_P.append(acc_Pi)
-        model_P.fit(X, y, batch_size=bz, epochs=epochs)
+        model_P.fit(X, y, batch_size=bz, epochs=epochs, verbose=0)
 
         
         indices.append(i)

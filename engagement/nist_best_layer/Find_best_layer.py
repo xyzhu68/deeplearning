@@ -47,6 +47,9 @@ while(len(layers) > 0):
                     topList[i] = acc # replace
                     break
             topList.sort(key=lambda tup: tup[1], reverse=True)
+        index = int(len(topList) * percent + 0.5)
+        index = max(1, index)
+        topList = topList[:index]
 
     print("engageLayers: ", engageLayers)
     print("topList: ", topList)

@@ -1,5 +1,6 @@
 import random
 import sys
+import datetime
 from VGG_classifier_engage_simple import *
 
 #check arguments
@@ -12,6 +13,8 @@ drift_type = sys.argv[1]
 percent = 0.3 # 30%
 totalLayers = 18
 layers = list(range(totalLayers))
+
+beginTime = datetime.datetime.now()
 
 topList = []
 numberLayersEngaged = 0
@@ -26,6 +29,8 @@ while(len(layers) > 0):
     for layer in engageLayers:
         # calculate the final accuracy of this engagement
         acc = Run_one_engagement(drift_type, layer+1)
+        print("layer: ", layer)
+        print("accuracy:", acc)
         numberLayersEngaged += 1
         accuracyList.append((layer, acc))
     accuracyList.sort(key=lambda tup: tup[1], reverse=True)
@@ -44,8 +49,14 @@ while(len(layers) > 0):
                     topList[i] = acc # replace
                     break
             topList.sort(key=lambda tup: tup[1], reverse=True)
+        index = int(len(topList) * percent + 0.5)
+        index = max(1, index)
+        topList = topList[:index]
 
     print("engageLayers: ", engageLayers)
     print("topList: ", topList)
 print("number of layers engaged: ", numberLayersEngaged)
+
+endTime = datetime.datetime.now()
+print(endTime - beginTime)
     

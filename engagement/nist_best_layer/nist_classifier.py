@@ -160,7 +160,7 @@ def Run_one_engagement(drift_type, layerToEngage):
             print("Unknown drift type")
             exit()
 
-        model_C0.fit(X, y, batch_size=20, epochs = epochs)
+        model_C0.fit(X, y, batch_size=20, epochs = epochs, verbose=0)
 
     C0Weights = "C0_weigths_{0}.h5".format(drift_type)
     model_C0.save_weights(C0Weights)
@@ -235,11 +235,11 @@ def Run_one_engagement(drift_type, layerToEngage):
         x_ms = x_ms.reshape(-1, img_size, img_size, 1)
         loss_ms, acc_ms = model_ms.evaluate(x_ms, y_ms, batch_size=20)
         accArray_MS.append(acc_ms)
-        h_ms = model_ms.fit(x_ms, y_ms, batch_size = 20, epochs = epochs)
+        h_ms = model_ms.fit(x_ms, y_ms, batch_size = 20, epochs = epochs, verbose=0)
 
         loss_Pi, acc_Pi = model_P.evaluate(X, y, batch_size=20)
         accArray_P.append(acc_Pi)
-        h_Pi = model_P.fit(X, y, batch_size=20, epochs=epochs)
+        h_Pi = model_P.fit(X, y, batch_size=20, epochs=epochs, verbose=0)
         
         indices.append(i)
 
