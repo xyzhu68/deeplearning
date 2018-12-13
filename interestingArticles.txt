@@ -19,3 +19,6 @@ http://papers.nips.cc/paper/5347-how-transferable-are-features-in-deep-neural-ne
 
 Learning rate:
 https://towardsdatascience.com/understanding-learning-rates-and-how-it-improves-performance-in-deep-learning-d0d4059c1c10
+
+Online deep learning:
+https://arxiv.org/abs/1711.03705

@@ -29,6 +29,8 @@ while(len(layers) > 0):
     for layer in engageLayers:
         # calculate the final accuracy of this engagement
         acc = Run_one_engagement(drift_type, layer+1)
+        print("layer: ", layer)
+        print("accuracy:", acc)
         numberLayersEngaged += 1
         accuracyList.append((layer, acc))
     accuracyList.sort(key=lambda tup: tup[1], reverse=True)

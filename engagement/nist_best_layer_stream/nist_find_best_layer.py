@@ -15,7 +15,6 @@ import random
 
 from data_provider import *
 from model_provider import *
-import random # TEST
 
 # settings for GPU
 import tensorflow as tf
@@ -30,15 +29,6 @@ if nbArgs < 2:
     print("Please define drift type")
     exit()
 drift_type = sys.argv[1]
-
-# blockToEngage = 4
-# if nbArgs > 2:
-#     blockToEngage =  int(sys.argv[2])
-#     valid = 0 < blockToEngage < 5 # 1, 2, 3, 4
-#     if not valid:
-#         print("block to engage can only be 1, 2, 3, or 4")
-#         exit()
-
 
 
 # Functions +++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -65,10 +55,6 @@ def build_model(model_type, weights, nbFilters, layerToEngage):
     model_conv = make_conv_model(nbFilters, True)
     if weights:
         model_conv.load_weights(weights, by_name=True)
-        # do freezing
-        for i in range(len(model_conv.layers)):
-            if i < layerToEngage:
-                model_conv.layers[i].trainable = False
     else:
         # do engagement
         layersToPop = 12 - layerToEngage
@@ -76,14 +62,11 @@ def build_model(model_type, weights, nbFilters, layerToEngage):
             model_conv.pop()
     model = Sequential()
     model.add(model_conv)
-    model.add(Dropout(0.5)) # changed
     model.add(Flatten(name="Flatten"))
-
+    # patching
     model.add(Dense(512))
-    #if model_type == "P":
-    model.add(BatchNormalization(momentum=0.9)) # changed
     model.add(Activation('relu'))
-    model.add(Dropout(0.25))
+    model.add(Dropout(0.5))
     if model_type == "E":
         model.add(Dense(1, name="Ei_dense1"))
         model.add(Activation('sigmoid', name="Ei_act"))
@@ -164,12 +147,6 @@ for i in range(nbBaseBatches):
 C0Weights = "C0_weigths_{0}.h5".format(drift_type)
 model_C0.save_weights(C0Weights)
 
-
-
-# # model_E = build_model("E", "")
-# model_P = build_model("P", "", nbFilters, layerToEngage)
-# model_ms = build_model("E", "", nbFilters, layerToEngage)
-
 # build all 12 possible patching networks
 models_P = []
 models_ms = []
@@ -188,7 +165,7 @@ nextPopulation = 2
 nbOfFitnessToCompare = 2
 for b in range(nbBaseBatches/bundleSize, nbBatches/bundleSize):
     print("bundle number: {0}".format(b))
-    i = b * 10
+    i = b * bundleSize
     
     X_org, y_org = train_generator_bundle.next()
     
@@ -219,11 +196,11 @@ for b in range(nbBaseBatches/bundleSize, nbBatches/bundleSize):
     while len(layers) > 0:
         nbOfLayersToEngage = initPopulation if generation == 1 else nextPopulation
         random.shuffle(layers)
-        selectedLayers = layersToEngage[0 : nbOfLayersToEngage]
+        selectedLayers = layers[0 : nbOfLayersToEngage]
         layers = layers[nbOfLayersToEngage : ]
 
         currentResult = []
-        for l in layers:
+        for l in selectedLayers:
             model_P = models_P[l]
             model_ms = models_ms[l]
             # evaluate on data first (equivalent to validation)
@@ -249,6 +226,7 @@ for b in range(nbBaseBatches/bundleSize, nbBatches/bundleSize):
             currentResult.append((b, l, acc))
         # sort  current results
         currentResult.sort(key=lambda tup:tup[2], reverse=True)
+        print("CurrentResult: ", currentResult)
         # update results
         hasBetterLayer = False
         if generation == 1:
@@ -256,18 +234,20 @@ for b in range(nbBaseBatches/bundleSize, nbBatches/bundleSize):
         else:
             for a in range(nbOfFitnessToCompare):
                 acc_a = currentResult[a]
-                for b in range(nbOfFitnessToCompare):
+                for b in range(len(nbOfFitnessToCompare)-1, -1, -1): # update the lower value first
                     acc_b = results[b]
                     if acc_a > acc_b:
                         hasBetterLayer = True
                         results[b] = currentResult[a] # replace
             results.sort(key=lambda tup:tup[2], reverse=True)
+            print("Results: ", results)
             # check stop condition
-            if hasBetterLayer == False:
+            if hasBetterLayer == False and generation >=3:
                 break
         generation += 1
     # save results
     print("RESULT: ", results[0])
+    print("\n")
 
 endTime = datetime.datetime.now()
 print(endTime - beginTime)
