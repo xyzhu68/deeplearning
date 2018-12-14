@@ -26,17 +26,35 @@ def calc_accuracy(img_size, modelC0, modelEi, modelCi, X, y):
         index += 1
     return correct / len(X)
 
-Evolutionary(totalNumberOfSelections, 
-             nbOfFitnessToCompare,
-             initPopulation,
-             nextPopulation,
-             model_C0,
-             models_P,
-             models_ms,
-             img_size,
-             bundleIndex):
+def UpdateResults(whole_results, current_results, nbOfFitness):
+    hasBetterCurrentResult = False
+    whole_results = whole_results[:nbOfFitness]
+    current_results = current_results[:nbOfFitness]
+    for wr in whole_results:
+        for cr in current_results:
+            if cr[2] > wr[2]:
+                hasBetterCurrentResult = True
+                break
+    if hasBetterCurrentResult:
+        whole_results = whole_results + current_results
+        whole_results.sort(key=lambda tup:tup[2], reverse=True)
+        whole_results = whole_results[:nbOfFitness]
+    return (hasBetterCurrentResult, whole_results)
+
+
+def Evolutionary(   totalNumberOfSelections, 
+                    nbOfFitnessToCompare,
+                    initPopulation,
+                    nextPopulation,
+                    model_C0,
+                    models_P,
+                    models_ms,
+                    img_size,
+                    bundleIndex,
+                    X,
+                    y):
     generation = 1
-    selections = range(totalNumberOfSelections)
+    selections = list(range(totalNumberOfSelections))
     results = [] # elements are tuple of bundle number, selected index (0-based) and accuracy
     while len(selections) > 0:
         nbOfSelections = initPopulation if generation == 1 else nextPopulation
@@ -49,7 +67,8 @@ Evolutionary(totalNumberOfSelections,
             model_P = models_P[s]
             model_ms = models_ms[s]
             # evaluate on data first (equivalent to validation)
-            acc = calc_accuracy(imag_size, model_C0, model_ms, model_P, X, y)
+            #!!!!!! acc = calc_accuracy(img_size, model_C0, model_ms, model_P, X, y)
+            acc = random.uniform(0, 1) #!!!!!!!!!
             # build data for ms
             x_ms = []
             y_ms = []
@@ -65,30 +84,32 @@ Evolutionary(totalNumberOfSelections,
                     x_ms.append(X[index])
                     y_ms.append(1)
             # train the models
-            model_ms.fit(x_ms, y_ms, batch_size = 20, epochs = epochs, verbose = 0)
-            model_P.fit(X, y, batch_size = 20, epochs epochs, verbose = 0)
+            #!!!!!! model_ms.fit(x_ms, y_ms, batch_size = 20, epochs = epochs, verbose = 0)
+            #!!!!!! model_P.fit(X, y, batch_size = 20, epochs = epochs, verbose = 0)
             # save result
             currentResult.append((bundleIndex, s, acc))
         # sort  current results
         currentResult.sort(key=lambda tup:tup[2], reverse=True)
         print("CurrentResult: ", currentResult)
         # update results
-        hasBetterLayer = False
         if generation == 1:
             results = currentResult
         else:
-            for a in range(nbOfFitnessToCompare):
-                acc_current = currentResult[a]
-                for b in range(len(nbOfFitnessToCompare)-1, -1, -1): # update the lower value first
-                    acc_whole = results[b]
-                    if acc_current > acc_whole:
-                        hasBetterLayer = True
-                        results[b] = currentResult[a] # replace
-                        break
-            results.sort(key=lambda tup:tup[2], reverse=True)
+            # hasBetterLayer = False
+            # results = results[: nbOfFitnessToCompare]
+            # for a in range(nbOfFitnessToCompare):
+            #     acc_current = currentResult[a]
+            #     for b in range(nbOfFitnessToCompare-1, -1, -1): # update the lower value first
+            #         acc_whole = results[b]
+            #         if acc_current > acc_whole:
+            #             hasBetterLayer = True
+            #             results[b] = currentResult[a] # replace
+            #             break
+            # results.sort(key=lambda tup:tup[2], reverse=True)
+            hasBetterResult, results = UpdateResults(results, currentResult, nbOfFitnessToCompare)
             print("Results: ", results)
             # check stop condition
-            if hasBetterLayer == False and generation >=3:
+            if hasBetterResult == False and generation >=3:
                 break
         generation += 1
     # save results
