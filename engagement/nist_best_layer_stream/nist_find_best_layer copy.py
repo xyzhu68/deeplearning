@@ -49,7 +49,76 @@ drift_type = sys.argv[1]
 #         index += 1
 #     return correct / len(X)
 
+def MakePatchModel(model, variant):
+    if variant == 1:
+        model.add(Dense(128))
+    elif variant == 2:
+        model.add(Dense(256))
+    elif variant == 3:
+        model.add(Dense(512))
+    elif variant == 4:
+        model.add(Dense(1024))
+    elif variant == 5:
+        model.add(Dense(2048))
+    elif variant == 6:
+        model.add(Dense(256))
+        model.add(Dense(128))
+    elif variant == 7:
+        model.add(Dense(512))
+        model.add(Dense(256))
+    elif variant == 8:
+        model.add(Dense(1024))
+        model.add(Dense(512))
+    elif variant == 9:
+        model.add(Dense(2048))
+        model.add(Dense(1024))
+    elif variant == 10:
+        model.add(Dense(512))
+        model.add(Dense(256))
+        model.add(Dense(128))
+    elif variant == 11:
+        model.add(Dense(1024))
+        model.add(Dense(512))
+        model.add(Dense(256))
+    elif variant == 12:
+        model.add(Dense(2048))
+        model.add(Dense(1024))
+        model.add(Dense(512))
+    return model
 
+def build_model(model_type, weights, nbFilters, layerToEngage):
+    model = None
+
+    model_conv = make_conv_model(nbFilters, True)
+    if weights:
+        model_conv.load_weights(weights, by_name=True)
+    else:
+        # do engagement
+        layersToPop = 12 - layerToEngage
+        for i in range(layersToPop):
+            model_conv.pop()
+    model = Sequential()
+    model.add(model_conv)
+    model.add(Flatten(name="Flatten"))
+    # patching
+    model.add(Dense(512))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
+    if model_type == "E":
+        model.add(Dense(1, name="Ei_dense1"))
+        model.add(Activation('sigmoid', name="Ei_act"))
+        #model.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['binary_accuracy'])
+        #changed
+        sgd = optimizers.SGD(lr=0.001)
+        model.compile(loss='binary_crossentropy', optimizer=sgd, metrics=['binary_accuracy'])
+    elif model_type == "P":
+        model.add(Dense(36))
+        model.add(Activation('softmax'))
+        model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['categorical_accuracy'])
+    else:
+        print("invalid model type: {0}".format(model_type))
+
+    return model
 
 #  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -117,22 +186,20 @@ C0Weights = "C0_weigths_{0}.h5".format(drift_type)
 model_C0.save(C0Weights)
 del model_C0
 
+# build all 12 possible patching networks for engagement
+models_P = []
+models_ms = []
 totalNumberOfLayers = 12
-
-# # build all 12 possible patching networks for engagement
-# models_P = []
-# models_ms = []
-# totalNumberOfLayers = 12
-# for i in range(totalNumberOfLayers):
-#     model_P = build_model("P", "", nbFilters, i+1) # layer number is 1-based!
-#     # models_P.append(model_P)
-#     model_ms = build_model("E", "", nbFilters, i+1)
-#     # models_ms.append(model_ms)
-#     model_P.save(buildModelName("engage", "P", drift_type, i+1))
-#     del model_P
-#     model_ms.save(buildModelName("engage", "E", drift_type, i+1))
-#     del model_ms
-#     K.clear_session()
+for i in range(totalNumberOfLayers):
+    model_P = build_model("P", "", nbFilters, i+1) # layer number is 1-based!
+    # models_P.append(model_P)
+    model_ms = build_model("E", "", nbFilters, i+1)
+    # models_ms.append(model_ms)
+    model_P.save(buildModelName("engage", "P", drift_type, i+1))
+    del model_P
+    model_ms.save(buildModelName("engage", "E", drift_type, i+1))
+    del model_ms
+    K.clear_session()
 
 
 # adaption: data changed
@@ -140,8 +207,7 @@ angle = 0 # for rotate
 initPopulation = 4
 nextPopulation = 2
 nbOfFitnessToCompare = 2
-engageResults = []
-PAResults = []
+allResults = []
 for b in range(nbBaseBatches//bundleSize, nbBatches//bundleSize):
     print("bundle number: {0}".format(b))
     i = b * bundleSize
@@ -184,17 +250,15 @@ for b in range(nbBaseBatches//bundleSize, nbBatches//bundleSize):
                             epochs,
                             drift_type,
                             "engage")
-    engageResults.append(results)
-    results = Evolutionary(10, 2, 3, 2, img_size, b, X, y, epochs, drift_type, "PA", results[0])
-    PAResults.append(results)
+    allResults.append(results)
    
     loopend = datetime.datetime.now()
     print("loop time: ", loopend - loopbegin)
-    # break # !!!!!!!! TEST
+    break # !!!!!!!! TEST
 
 
 endTime = datetime.datetime.now()
 print(endTime - beginTime)
 
 fileName = "nist_best_layer_{0}.npz".format(drift_type)
-np.savez(fileName, engageResults = engageResults, PAResults = PAResults, duration=str(endTime - beginTime))
+np.savez(fileName, allResults = allResults, duration=str(endTime - beginTime))
