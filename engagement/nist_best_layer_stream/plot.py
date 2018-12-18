@@ -23,4 +23,25 @@ def plot_engagement():
     topOne = PAResults[0][0]
     print("batch: {0}, var: {1}".format(topOne[0], topOne[1]))
 
-plot_engagement()
+#plot_engagement()
+
+def plot_PA():
+    data = np.load("nist_best_layer_flip.npz")
+    PAResults = data["PAResults"]
+    x = []
+    y = []
+    for result in PAResults:
+        topResult = result[0]
+        x.append(topResult[0])
+        y.append(topResult[1]+1)
+
+    plt.plot(x, y, marker="s", markersize=2, linestyle="None")
+    plt.axvline(x=50, color="red")
+    plt.title("NIST - Best Patch on Batches")
+    plt.ylabel("Architecture")
+    plt.xlabel("Batch")
+    plt.legend()
+    plt.show()
+    print("Duration: ", data["duration"])
+
+plot_PA()
