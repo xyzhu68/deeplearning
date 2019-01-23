@@ -158,34 +158,34 @@ for i in range(100):
 
     X = None
     y = None
-    label = 0
-    change = bool(random.getrandbits(1))
+    change = bool(random.getrandbits(1)) # changed and non-changed data
     if drift_type == "flip":
         X, y, _ = flip_images(X_org, y_org, change)
-        label = 1 if change else 0
     elif drift_type == "appear":
         isBase = change
         X, y, _ = appear(X_org, y_org, isBase)
-        label = 0 if isBase else 1
     elif drift_type == "remap":
         firstHalf = change
         X, y, _ = remap(X_org, y_org, firstHalf)
-        label = 0 if firstHalf else 1
     elif (drift_type == "rotate"):
         if not change:
             angle = 0
-            label = 0
         else:
             angle = random.randint(1, 181)
-            label = 1
         X, y, _ = rot(X_org, y_org, angle)
     elif drift_type == "transfer":
         firstHalf = change
         X, y, _ = transfer(X_org, y_org, firstHalf)
-        label = 0 if firstHalf else 1
 
-    testEX.extend(X)
-    testEY.extend(np.full(len(X), label, int))
+    # data for Ei
+    for index in range(len(X)):
+        predictC0 = model_C0.predict(X[index].reshape(1, 28, 28, 1), batch_size=1)
+        if np.argmax(predictC0) == np.argmax(y[index]):
+            testEX.append(X[index])
+            testEY.append(0)
+        else:
+            testEX.append(X[index])
+            testEY.append(1)
     
 
 testEX = np.asarray(testEX)
