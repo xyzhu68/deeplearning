@@ -6,6 +6,7 @@ import numpy as np
 # from keras.utils import to_categorical
 # from keras.preprocessing.image import ImageDataGenerator
 # from keras import optimizers, backend as K
+#from keras import backend as K
 import sys
 import os
 import matplotlib.pyplot as plt
@@ -32,10 +33,9 @@ if nbArgs < 2:
     exit()
 drift_type = sys.argv[1]
 
-searchEi = False
+hours = 12
 if nbArgs > 2:
-    if sys.argv[2] == "Ei":
-        searchEi = True
+    hours = int(sys.argv[2])
 
 filepath_train = "train.arff"
 
@@ -64,6 +64,8 @@ def data_generator(streamSize):
 
 beginTime = datetime.datetime.now()
 
+print("autokeras time limit: {0}".format(hours))
+
 # settings
 totalDataSize = 60000
 nbBatches = 100 # devide dataset into 100 batches
@@ -81,15 +83,12 @@ model_C0 = make_conv_model(64, False)
 # test data for fit_final of Ci
 testX = []
 testY = []
-# test data for fit_final of Ei
-testEX = []
-testEY = []
 
 # get data
 gen = data_generator(sizeOneBatch)
 # training in base phase
-for i in range(nbBaseBatches):
-#for i in range(1): # !!!!!!!!!!!!
+#for i in range(nbBaseBatches):
+for i in range(1): # !!!!!!!!!!!!
     print(i)
     X_org, y_org = next(gen)
     changeData = bool(random.getrandbits(1)) # used for create data for Ei
@@ -113,18 +112,12 @@ for i in range(nbBaseBatches):
         print("Unknown drift type")
         exit()
 
-    # model_C0.fit(X, y, batch_size=50, epochs = 10)
+    #model_C0.fit(X, y, batch_size=50, epochs = 10)
 
     testX.extend(x_t)
     ys = [np.argmax(y) for y in y_t]
     testY.append(ys)
 
-    if changeData:
-        testEX.extend(x_t)
-        testEY.append([1] * len(x_t))
-    else:
-        testEX.extend(X)
-        testEY.append([0] * len(X))
 
 #C0Weights = "C0_weigths_{0}.h5".format(drift_type)
 #model_C0.save_weights(C0Weights)
@@ -137,13 +130,6 @@ print("testX: ", testX.shape)
 print("testX value: ", testX[0])
 print("testY: ", testY.shape)
 print("testY value: ", testY[: 5])
-
-testEX = np.asarray(testEX)
-testEX = testEX.reshape(-1, 28, 28, 1)
-testEY = np.asarray(testEY)
-testEY = testEY.reshape(-1,)
-print("testEX: ", testEX.shape)
-print("testEY: ", testEY.shape)
 
 
 # adaption: data changed
@@ -177,16 +163,6 @@ for i in range(nbBaseBatches, nbBatches):
     elif drift_type == "transfer":
         X, y, _ = transfer(X_org, y_org, i < nbBatches/2)
 
-    # # data for Ei
-    # for index in range(len(X)):
-    #     predictC0 = model_C0.predict(X[index].reshape(1, 28, 28, 1), batch_size=1)
-    #     if np.argmax(predictC0) == np.argmax(y[index]):
-    #         trainEX.append(X[index])
-    #         trainEY.append(0)
-    #     else:
-    #         trainEX.append(X[index])
-    #         trainEY.append(1)
-
     # data for Ci
     if i >= changePoint:
         trainX.extend(X)
@@ -201,28 +177,15 @@ print("X: ", trainX.shape)
 print("y shape: ", np.asarray(trainY).shape)
 print("y: ", trainY[:20])
 
-# trainEX = np.asarray(trainEX)
-# trainEY = np.asarray(trainEY)
-# print("EX: ", trainEX.shape)
-# print("EY: ", trainEY.shape)
 
 clf = ImageClassifier(verbose=True)
-if searchEi:
-    clf.fit(trainEX, trainEY, time_limit=12 * 60 * 60)
-    clf.fit_final(trainEX, trainEY, testEX, testEY, retrain=True)
-    result = clf.evaluate(testEX, testEY)
-    print(result)
-else:
-    testLen = len(testX)
-    clf.fit(trainX, trainY, time_limit=12 * 60 * 60) 
-    #clf.final_fit(trainX, trainY, testX, testY, retrain=True)
-    result = clf.evaluate(testX, testY)
-    print(result)
+clf.fit(trainX, trainY, time_limit=hours * 60 * 60) 
+#clf.final_fit(trainX, trainY, testX, testY, retrain=True)
+result = clf.evaluate(testX, testY)
+print(result)
 
 cls_type = "Ci"
-if searchEi:
-    cls_type = "Ei"
-fileOfBestModel = "autokeras_mnist_{0}_{1}.h5".format(cls_type, drift_type)
+fileOfBestModel = "autokeras_mnist_{0}_{1}_{2}.h5".format(cls_type, drift_type, hours)
 #clf.load_searcher().load_best_model().produce_keras_model().save(fileOfBestModel)
 clf.export_keras_model(fileOfBestModel)
    
