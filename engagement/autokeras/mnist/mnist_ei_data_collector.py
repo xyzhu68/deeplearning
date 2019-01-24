@@ -44,8 +44,8 @@ def load_data(dataPath):
     y = dataArray[:,784]
     return (X, y)
 
-def data_generator(streamSize): 
-    X, y = load_data(filepath_train)
+def data_generator(streamSize, fileToLoad): 
+    X, y = load_data(fileToLoad)
     count = 0
     while True:
         X_result = X[count : count + streamSize]
@@ -75,10 +75,10 @@ changePoint = 50
 model_C0 = make_conv_model(64, False)
 
 # get data
-gen = data_generator(sizeOneBatch)
+gen = data_generator(sizeOneBatch, filepath_train)
 # training in base phase
-#for i in range(nbBaseBatches):
-for i in range(1): # !!!!!!!!!!!!
+for i in range(nbBaseBatches):
+#for i in range(1): # !!!!!!!!!!!!
     print(i)
     X_org, y_org = next(gen)
     changeData = bool(random.getrandbits(1)) # used for create data for Ei
@@ -151,8 +151,7 @@ print("trainEY: ", trainEY.shape)
 # test data
 testEX = []
 testEY = []
-test_X, test_y = load_data(filepath_test)
-testGen = data_generator(100)
+testGen = data_generator(100, filepath_test)
 for i in range(100):
     X_org, y_org = next(testGen)
 
