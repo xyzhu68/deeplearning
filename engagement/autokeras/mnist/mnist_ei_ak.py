@@ -1,6 +1,7 @@
 from autokeras.image.image_supervised import ImageClassifier
 import numpy as np
 import datetime
+import sys
 
 #check arguments
 nbArgs = len(sys.argv)
@@ -12,6 +13,8 @@ drift_type = sys.argv[1]
 hours = 12
 if nbArgs > 2:
     hours = int(sys.argv[2])
+
+print("train time limit: {0} hour(s)".format(hours))
 
 beginTime = datetime.datetime.now()
 
