@@ -135,8 +135,6 @@ print("testY value: ", testY[: 5])
 # adaption: data changed
 trainX = []
 trainY = []
-trainEX = []
-trainEY = []
 angle = 0 # for rotate
 for i in range(nbBaseBatches, nbBatches):
     print("batch number: {0}".format(i))
