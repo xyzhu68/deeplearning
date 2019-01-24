@@ -18,7 +18,7 @@ print("train time limit: {0} hour(s)".format(hours))
 
 beginTime = datetime.datetime.now()
 
-data_file = "ei_data_{0}".format(drift_type)
+data_file = "ei_data_{0}.npz".format(drift_type)
 data = np.load(data_file)
 
 x_train = data["trainEX"]
