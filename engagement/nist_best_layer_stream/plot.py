@@ -112,4 +112,37 @@ def give_sum_for_architecture(drift_type):
 
     print(resultDict)
 
-give_sum_for_architecture("transfer")
+#give_sum_for_architecture("transfer")
+
+def give_data(drift_type):
+    changePoint = 50
+    if drift_type == "appear":
+        changePoint = 30
+    data_l = np.load("nist_best_layer_{0}.npz".format(drift_type))
+    engageResults = data_l["engageResults"]
+
+    mapping = {1 : "A", 2 : "B", 10 : "C", 3 : "D", 4 : "E", 5 : "F", 6 : "G", 7 : "H", 8 : "I", 9 : "J"}
+    index = 1
+    file_pa = "nist_best_layer_{0}.npz".format(drift_type)
+    if drift_type == "flip" or drift_type == "remap":
+        file_pa = "nist_best_layer_{0}_PA.npz".format(drift_type)
+        index = 0
+    data_pa = np.load(file_pa)
+    PAResults = data_pa["PAResults"]
+
+    time = data_l["duration"]
+    print(time)
+
+    for i in range(len(engageResults)):
+        topResult = engageResults[i][0]
+        if topResult[0] < changePoint:
+            continue
+        topResult_pa = PAResults[i][index]
+        line_l = (int(topResult[0]+1), int(topResult[1] + 1), topResult[2])
+        line_pa = (int(topResult_pa[0]+1), mapping[topResult_pa[1]+1], topResult_pa[2])
+
+        if (i+1) % 10 == 0:
+            print(line_pa)
+
+
+give_data("transfer")

@@ -1,7 +1,9 @@
 from keras.datasets import mnist
 #from autokeras.image.image_supervised import ImageClassifier
-from keras.models import load_model
+from keras.models import load_model, Model
 from keras.utils import to_categorical
+from keras.activations import softmax
+from keras.layers import Activation
 
 # settings for GPU
 import tensorflow as tf
@@ -27,8 +29,13 @@ y_test = to_categorical(y_test, 10)
 # y = clf.evaluate(x_test, y_test)
 # print(y)
 
-model = load_model('autokeras_mnist_Ci_flip_12.h5')
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+model = load_model('autokeras_mnist_Ei_flip_12.h5')
+# model.layers[-1].activation = softmax
+x = model.output
+x = Activation('sigmoid', name='activation_add')(x)
+model = Model(model.input, x)
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy']) # categorical_crossentropy
+
 
 model.fit(x_train, y_train,
         batch_size=32,

@@ -208,19 +208,19 @@ def calculate_metrics(inputFile, outputFile, cp):
 
 def optimization():
     flip = np.load("random_patching/nist_engage_flip_4.npz")
-    flip_op = np.load("nist_engage_flip_4.npz")
+    flip_op = np.load("optimized_patching/nist_engage_flip_4.npz")
 
     rotate = np.load("random_patching/nist_engage_rotate_4.npz")
-    rotate_op = np.load("nist_engage_rotate_4.npz")
+    rotate_op = np.load("optimized_patching/nist_engage_rotate_4.npz")
 
     appear = np.load("random_patching/nist_engage_appear_4.npz")
-    appear_op = np.load("nist_engage_appear_4.npz")
+    appear_op = np.load("optimized_patching/nist_engage_appear_4.npz")
 
     remap = np.load("random_patching/nist_engage_remap_4.npz")
-    remap_op = np.load("nist_engage_remap_4.npz")
+    remap_op = np.load("optimized_patching/nist_engage_remap_4.npz")
 
     transfer = np.load("random_patching/nist_engage_transfer_4.npz")
-    transfer_op = np.load("nist_engage_transfer_4.npz")
+    transfer_op = np.load("optimized_patching/nist_engage_transfer_4.npz")
 
     nbFinalBatches = 5
     key = "accMSPi"

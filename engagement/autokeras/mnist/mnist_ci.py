@@ -87,8 +87,8 @@ testY = []
 # get data
 gen = data_generator(sizeOneBatch)
 # training in base phase
-#for i in range(nbBaseBatches):
-for i in range(1): # !!!!!!!!!!!!
+for i in range(nbBaseBatches):
+#for i in range(1): # !!!!!!!!!!!!
     print(i)
     X_org, y_org = next(gen)
     changeData = bool(random.getrandbits(1)) # used for create data for Ei
@@ -116,7 +116,7 @@ for i in range(1): # !!!!!!!!!!!!
 
     testX.extend(x_t)
     ys = [np.argmax(y) for y in y_t]
-    testY.append(ys)
+    testY.extend(ys)
 
 
 #C0Weights = "C0_weigths_{0}.h5".format(drift_type)
@@ -165,7 +165,7 @@ for i in range(nbBaseBatches, nbBatches):
     if i >= changePoint:
         trainX.extend(X)
         ys = [np.argmax(yItem) for yItem in y]
-        trainY.append(ys)
+        trainY.extend(ys)
 
 trainX = np.asarray(trainX)
 trainX = trainX.reshape(-1, 28, 28, 1)
@@ -174,7 +174,6 @@ trainY = trainY.reshape(-1,)
 print("X: ", trainX.shape)
 print("y shape: ", np.asarray(trainY).shape)
 print("y: ", trainY[:20])
-
 
 clf = ImageClassifier(verbose=True)
 clf.fit(trainX, trainY, time_limit=hours * 60 * 60) 
