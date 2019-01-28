@@ -5,7 +5,7 @@ from keras.layers.convolutional import Conv2D, MaxPooling2D
 from keras.layers import Input, Dense, Activation, Dropout, Flatten
 from keras.utils import to_categorical
 from keras.preprocessing.image import ImageDataGenerator
-from keras import backend as K
+from keras import optimizers, backend as K
 import sys
 import matplotlib.pyplot as plt
 from keras.activations import relu, softmax, sigmoid
@@ -30,6 +30,9 @@ if nbArgs < 2:
     exit()
 drift_type = sys.argv[1]
 
+hours = 12
+if nbArgs > 2:
+    hours = int(sys.argv[2])
 
 # Functions +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def load_data(dataPath):
@@ -117,22 +120,26 @@ for i in range(nbBaseBatches):
 # C0Weights = "C0_weigths_{0}.h5".format(drift_type)
 # model_C0.save_weights(C0Weights)
 
-model_E = load_model('autokeras_mnist_Ei_{0}_12.h5'.format(drift_type))
+model_E = load_model('autokeras_mnist_Ei_{0}_{1}.h5'.format(drift_type, hours))
 x = model_E.output
 x = Activation('softmax', name='activation_add')(x)
 model_E = Model(model_E.input, x)
-model_E.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy']) # categorical_crossentropy
+sgd = optimizers.SGD(lr=0.001)
+# model_E.compile(optimizer='adadelta', loss='categorical_crossentropy', metrics=['accuracy']) # categorical_crossentropy
+model_E.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=['accuracy'])
 
-model_P = load_model('autokeras_mnist_Ci_{0}_12.h5'.format(drift_type))
+model_P = load_model('autokeras_mnist_Ci_{0}_{1}.h5'.format(drift_type, hours))
 x = model_P.output
 x = Activation('softmax', name='activation_add')(x)
 model_P = Model(model_P.input, x)
-model_P.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy']) # categorical_crossentropy
+sgd2 = optimizers.SGD(lr=0.001)
+# model_P.compile(optimizer='adadelta', loss='categorical_crossentropy', metrics=['accuracy']) # categorical_crossentropy
+model_P.compile(optimizer=sgd2, loss='categorical_crossentropy', metrics=['accuracy'])
 
 # adaption: data changed
 angle = 0 # for rotate
 for i in range(nbBaseBatches, nbBatches):
-    print(i)
+    print("batch nb: ", i)
     loopBegin = datetime.datetime.now()
     
     X_org, y_org = next(gen)
@@ -186,6 +193,7 @@ for i in range(nbBaseBatches, nbBatches):
         # print(y.shape)
     loss_P, acc_P = model_P.evaluate(X, y, batch_size=50)
     accArray_P.append(acc_P)
+    print("Ci ACC: ", acc_P)
     model_P.fit(X, y, batch_size=50, epochs=10)
     
     indices.append(i)
@@ -200,7 +208,7 @@ for i in range(nbBaseBatches, nbBatches):
 endTime = datetime.datetime.now()
 print(endTime - beginTime)
 
-npFileName = "mnist_ak_{0}.npz".format(drift_type)
+npFileName = "mnist_ak_{0}_{1}_sgd.npz".format(drift_type, hours)
 np.savez(npFileName, accBase = accArray_Base,
                      accE = accArray_E,
                      accP = accArray_P,

@@ -110,7 +110,7 @@ def plot_one_npz(fileName, drift_type):
 
 
 
-    plt.plot(indices, data["accEiPi"][begin:], label = "NN-Patching")
+    plt.plot(indices, data["accEiPi"][begin:], label = "Patching with AK models")
 
     plt.title("MNIST - {0}".format(drift_type))
     plt.ylabel("Accuracy")
@@ -118,4 +118,26 @@ def plot_one_npz(fileName, drift_type):
     plt.legend()
     plt.show()
 
-plot_one_npz("mnist_ak_flip.npz", "flip")
+plot_one_npz("mnist_ak_remap_1.npz", "remap")
+
+def calculate_metrics(input_file):
+    data = np.load(input_file)
+    acc = data["accEiPi"]
+
+    finalAcc = np.mean(acc[-5:])
+    print("final accuracy: {0}".format(finalAcc))
+
+    acAcc = np.mean(acc[-50:])
+    print("average accuracy: ", acAcc)
+
+    index = 0
+    for i in range(30, len(acc)):
+        print(acc[i])
+        if acc[i] >= 0.9 * finalAcc:
+            index = i
+            break
+    print("recovery speed: {0}".format(index - 30))
+    print("duration: {0}".format(data["duration"]))
+
+
+#calculate_metrics("mnist_ak_flip.npz")
