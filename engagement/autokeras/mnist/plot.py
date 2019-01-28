@@ -97,4 +97,25 @@ def show_mnist():
     plt.imshow(image, cmap='gray')
     plt.show()
 
-show_mnist()
+#show_mnist()
+
+def plot_one_npz(fileName, drift_type):
+    data = np.load(fileName)
+    begin = 10
+    indices = data["indices"][begin:]
+    # accArray_Base = data["accBase"]
+    # accArray_E = data["accE"]
+    # accArray_P = data["accP"]
+    # accEiPi = data["accEiPi"]
+
+
+
+    plt.plot(indices, data["accEiPi"][begin:], label = "NN-Patching")
+
+    plt.title("MNIST - {0}".format(drift_type))
+    plt.ylabel("Accuracy")
+    plt.xlabel("Batch")
+    plt.legend()
+    plt.show()
+
+plot_one_npz("mnist_ak_flip.npz", "flip")
