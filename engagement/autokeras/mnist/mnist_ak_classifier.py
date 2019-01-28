@@ -57,7 +57,7 @@ def calc_accuracy(modelC0, modelEi, modelCi, X, y):
     correct = 0
     predict = None
     for p in predictEi:
-        if p[0] > 0.5:
+        if p[1] > p[0]:
             predict = modelCi.predict(X[index].reshape(1, 28, 28, 1), batch_size=1)
         else:
             predict = modelC0.predict(X[index].reshape(1, 28, 28, 1), batch_size=1)

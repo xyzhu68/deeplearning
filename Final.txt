@@ -30,3 +30,5 @@ This thesis mainly focused on network patching algorithm using streaming data. E
 5) build patch network differently. Other than one fully connected hidden layer or one Conv-block plus fully connected layer we used for Dog-Monkey dataset, other structures can be used and experimented on different datasets
 6) build a website to receive data for evaluation and training. In this thesis the data stream in batches is a simulation of reality. A website that receives data all the time and evaluate and train the data "live" is more realistic
 
+
+http://alexlenail.me/NN-SVG/index.html

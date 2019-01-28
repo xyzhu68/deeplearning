@@ -2,6 +2,7 @@ from keras.models import load_model
 from keras.utils import plot_model
 import numpy as np
 import matplotlib.pyplot as plt
+from keras.datasets import mnist
 
 def plot_model():
     MODEL_DIR = "autokeras_mnist_Ci_flip.h5"
@@ -68,4 +69,32 @@ def plot_found_model_info():
     fig.tight_layout()
     plt.show()
 
-plot_found_model_info()
+#plot_found_model_info()
+
+def plot_time_acc():
+    x = [1, 6, 12]
+    acc_ci_flip = [0.9635833333333333, 0.96975, 0.974]
+    acc_ei_flip = [0.6957, 0.7947, 0.7879]
+    acc_ci_remap = [0.991801878736123, 0.9959009393680615, 0.9970964987190436]
+    acc_ei_remap = [0.9475878499106611, 0.95096287472702, 0.9483819733968633]
+
+    plt.xticks(x)
+    plt.plot(x, acc_ci_flip, label='Ci flip', marker='s')
+    plt.plot(x, acc_ei_flip, label='Ei flip', marker='o')
+    plt.plot(x, acc_ci_remap, label='Ci remap', marker='s')
+    plt.plot(x, acc_ei_remap, label='Ei remap', marker='o')
+    plt.title('Accuracy vs Time')
+    plt.ylabel('Accuracy')
+    plt.xlabel('Running time (hours)')
+    plt.legend()
+    plt.show()
+
+#plot_time_acc()
+
+def show_mnist():
+    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+    image=x_train[6781]
+    plt.imshow(image, cmap='gray')
+    plt.show()
+
+show_mnist()
