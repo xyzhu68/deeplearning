@@ -87,6 +87,23 @@ def plot_engagement(drift_type):
     
 #plot_engagement("rotate")
 
+def give_engagement_data(drift_type):
+    acc_list_ei = []
+    acc_list_ms = []
+    for i in range(7):
+        file = "random_patching/mnist_engage_{0}_{1}.npz".format(drift_type, i+1)
+        data = np.load(file)
+        final_acc_ms = data["accMSPi"][-5]
+        acc_list_ms.append(np.mean(final_acc_ms))
+        final_acc_ei = data["accEiPi"][-5]
+        acc_list_ei.append(np.mean(final_acc_ei))
+    print(drift_type + ": Error detector")
+    print(acc_list_ei)
+    print(drift_type + ": Model selector")
+    print(acc_list_ms)
+
+give_engagement_data("transfer")
+
 def calculate_metrics(inputFile, outputFile, cp):
     data = np.load(inputFile)
     acc = []
@@ -230,4 +247,4 @@ def plot_filter_time(drift_type):
     plt.ylabel("Running time")
     plt.show()
 
-plot_filter_time("rotate")
+#plot_filter_time("rotate")

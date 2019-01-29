@@ -5,9 +5,13 @@ import matplotlib.pyplot as plt
 from keras.datasets import mnist
 
 def plot_model():
-    MODEL_DIR = "autokeras_mnist_Ci_flip.h5"
+    MODEL_DIR = "autokeras_mnist_Ci_flip_12.h5"
     model = load_model(MODEL_DIR)
-    plot_model(model, to_file="flip_ci.png")
+    #plot_model(model, to_file="flip_ci.png")
+    with open("autokeras_mnist_Ci_flip_12.txt", "w") as text_file:
+        model.summary(print_fn=lambda x: text_file.write(x))
+
+plot_model()
 
 def plot_found_model_info():
     fig, ax1 = plt.subplots()
@@ -115,10 +119,10 @@ def plot_one_npz(fileName, drift_type):
     plt.title("MNIST - {0}".format(drift_type))
     plt.ylabel("Accuracy")
     plt.xlabel("Batch")
-    plt.legend(loc = "lower right")
+    plt.legend(loc = "lower left")
     plt.show()
 
-#plot_one_npz("mnist_ak_remap_1_sgd.npz", "remap")
+#plot_one_npz("mnist_ak_remap.npz", "remap")
 
 def calculate_metrics(input_file):
     data = np.load(input_file)
@@ -140,4 +144,4 @@ def calculate_metrics(input_file):
     print("duration of {0}: {1}".format(input_file, data["duration"]))
 
 
-calculate_metrics("mnist_ak_remap_1_sgd.npz")
+#calculate_metrics("mnist_ak_remap_1_sgd.npz")
