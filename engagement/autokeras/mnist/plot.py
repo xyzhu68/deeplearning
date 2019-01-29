@@ -115,10 +115,10 @@ def plot_one_npz(fileName, drift_type):
     plt.title("MNIST - {0}".format(drift_type))
     plt.ylabel("Accuracy")
     plt.xlabel("Batch")
-    plt.legend()
+    plt.legend(loc = "lower right")
     plt.show()
 
-plot_one_npz("mnist_ak_remap_1.npz", "remap")
+#plot_one_npz("mnist_ak_remap_1_sgd.npz", "remap")
 
 def calculate_metrics(input_file):
     data = np.load(input_file)
@@ -137,7 +137,7 @@ def calculate_metrics(input_file):
             index = i
             break
     print("recovery speed: {0}".format(index - 30))
-    print("duration: {0}".format(data["duration"]))
+    print("duration of {0}: {1}".format(input_file, data["duration"]))
 
 
-#calculate_metrics("mnist_ak_flip.npz")
+calculate_metrics("mnist_ak_remap_1_sgd.npz")
