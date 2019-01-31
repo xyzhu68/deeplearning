@@ -1,17 +1,18 @@
 from keras.models import load_model
 from keras.utils import plot_model
+import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 from keras.datasets import mnist
 
 def plot_model():
-    MODEL_DIR = "autokeras_mnist_Ci_flip_12.h5"
+    MODEL_DIR = "autokeras_mnist_Ei_flip_12.h5"
     model = load_model(MODEL_DIR)
-    #plot_model(model, to_file="flip_ci.png")
-    with open("autokeras_mnist_Ci_flip_12.txt", "w") as text_file:
-        model.summary(print_fn=lambda x: text_file.write(x))
+    tf.keras.utils.plot_model(model, to_file="flip_ei.png")
+    # with open("autokeras_mnist_Ci_flip_12.txt", "w") as text_file:
+    #     model.summary(print_fn=lambda x: text_file.write(x))
 
-plot_model()
+# plot_model()
 
 def plot_found_model_info():
     fig, ax1 = plt.subplots()
@@ -103,7 +104,7 @@ def show_mnist():
 
 #show_mnist()
 
-def plot_one_npz(fileName, drift_type):
+def plot_one_npz(fileName, fileName2, drift_type):
     data = np.load(fileName)
     begin = 10
     indices = data["indices"][begin:]
@@ -111,18 +112,19 @@ def plot_one_npz(fileName, drift_type):
     # accArray_E = data["accE"]
     # accArray_P = data["accP"]
     # accEiPi = data["accEiPi"]
-
+    data2 = np.load(fileName2)
 
 
     plt.plot(indices, data["accEiPi"][begin:], label = "Patching with AK models")
+    plt.plot(indices, data2["accEiPi"][begin:], label = "Patching with simple models")
 
     plt.title("MNIST - {0}".format(drift_type))
     plt.ylabel("Accuracy")
     plt.xlabel("Batch")
-    plt.legend(loc = "lower left")
+    plt.legend(loc = "lower right")
     plt.show()
 
-#plot_one_npz("mnist_ak_remap.npz", "remap")
+plot_one_npz("mnist_ak_flip.npz", "mnist_engage_flip_7.npz", "flip")
 
 def calculate_metrics(input_file):
     data = np.load(input_file)

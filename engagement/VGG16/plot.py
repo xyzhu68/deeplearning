@@ -77,7 +77,7 @@ def give_engagement_data(drift_type):
     print(drift_type + ": Model selector")
     print(acc_list_ms)
 
-#give_engagement_data("appear")
+give_engagement_data("transfer")
 
 def calculate_metrics(input_file, cp):
     data = np.load(input_file)
@@ -113,6 +113,6 @@ def calculate_metrics(input_file, cp):
 
     print("duration of {0}: {1}".format(input_file, data["duration"]))
 
-drift_type = "transfer"
-cp = 50
-calculate_metrics("vgg_{0}_base.npz".format(drift_type), cp)
+# drift_type = "transfer"
+# cp = 50
+# calculate_metrics("vgg_{0}_base.npz".format(drift_type), cp)
