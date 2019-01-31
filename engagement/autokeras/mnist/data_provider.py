@@ -4,7 +4,7 @@ from keras.preprocessing.image import ImageDataGenerator
 from scipy.ndimage import rotate
 from sklearn.utils import shuffle
 import random
-import matplotlib.pyplot as plt # DEBUG
+#import matplotlib.pyplot as plt # DEBUG
 
 def flip_images(X, y, doFlip):
     if not doFlip:
