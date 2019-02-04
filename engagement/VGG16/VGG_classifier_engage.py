@@ -35,9 +35,6 @@ if nbArgs < 3:
     exit()
 blockNumber = int(sys.argv[2])
 
-# nbFreeze = -1
-# if nbArgs > 2:
-#     nbFreeze = int(sys.argv[2])
 
 # settings
 img_size = 150
@@ -46,8 +43,6 @@ epochs = 10
 nbClasses = 20
 bz = 20 # batch_size for fit & evaluate
 
-# totalDataSize = 70000
-# sizeOneBatch = 700
 nbBatches = 100
 nbBaseBatches = nbBatches // 5 # size of base dataset: 20% of total batches
 
@@ -96,6 +91,9 @@ def make_vgg_model(Ei):
     base_model = applications.VGG16(include_top=False, weights='imagenet', input_tensor=input_tensor)
     #print(base_model.summary())
 
+    # We freeze all VGG16 vision layers and remove all layers after the engagement layer.
+    # The patch network is then added to it.
+    # This is equilvalent to the method using intermediate layer. This method has an advantage: the inputs are same for C0, Ei and Ci
     for layer in base_model.layers:
         layer.trainable = False
     popDict = {1: 15, 2: 12, 3: 8, 4: 4, 5: 0}
