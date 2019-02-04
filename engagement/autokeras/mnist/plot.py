@@ -106,17 +106,21 @@ def show_mnist():
 
 def plot_one_npz(fileName, fileName2, drift_type):
     data = np.load(fileName)
-    begin = 10
+    begin = 30
     indices = data["indices"][begin:]
     # accArray_Base = data["accBase"]
     # accArray_E = data["accE"]
     # accArray_P = data["accP"]
     # accEiPi = data["accEiPi"]
-    data2 = np.load(fileName2)
+    if not fileName2:
+        data2 = None
+    else:
+        data2 = np.load(fileName2)
 
 
     plt.plot(indices, data["accEiPi"][begin:], label = "Patching with AK models")
-    plt.plot(indices, data2["accEiPi"][begin:], label = "Patching with simple models")
+    if data2:
+        plt.plot(indices, data2["accEiPi"][begin:], label = "Patching with simple models")
 
     plt.title("MNIST - {0}".format(drift_type))
     plt.ylabel("Accuracy")
@@ -124,7 +128,7 @@ def plot_one_npz(fileName, fileName2, drift_type):
     plt.legend(loc = "lower right")
     plt.show()
 
-plot_one_npz("mnist_ak_flip.npz", "mnist_engage_flip_7.npz", "flip")
+plot_one_npz("mnist_ak_remap.npz", "", "remap")
 
 def calculate_metrics(input_file):
     data = np.load(input_file)

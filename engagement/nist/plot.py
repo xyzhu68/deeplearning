@@ -54,8 +54,9 @@ def plot_Ei_n(drift_type):
 
 def plot_one_npz(fileName, drift_type):
     data = np.load(fileName)
-    begin = 10
+    begin = 30
     indices = data["indices"][begin:]
+    i2 = data["indices"][10:]
     # accArray_Base = data["accBase"]
     # accArray_E = data["accE"]
     # accArray_P = data["accP"]
@@ -64,7 +65,7 @@ def plot_one_npz(fileName, drift_type):
 
     plt.plot(indices, data["accBaseUpdated"][begin:], label="Base update")
     plt.plot(indices, data["accFreezing"][begin:], label="Freezing")
-    plt.plot(indices, data["accBase"][begin:], label="Base line")
+    plt.plot(i2, data["accBase"][10:], label="Base line")
     plt.plot(indices, data["accEiPi"][begin:], label = "NN-Patching")
     plt.plot(indices, data["accMSPi"][begin:], label = "NN-Patching ms")
     plt.title("NIST - {0}".format(drift_type))
@@ -73,9 +74,9 @@ def plot_one_npz(fileName, drift_type):
     plt.legend()
     plt.show()
 
-# drift_type = "transfer"
-# layer = 4
-# plot_one_npz("nist_engage_{0}_{1}.npz".format(drift_type, layer), drift_type)
+drift_type = "transfer"
+layer = 4
+plot_one_npz("random_patching/nist_engage_{0}_{1}.npz".format(drift_type, layer), drift_type)
 
 def plot_engagement(drift_type):
     acc_list = []
@@ -109,7 +110,7 @@ def give_engagement_data(drift_type):
     print(drift_type + ": Model selector")
     print(acc_list_ms)
 
-give_engagement_data("remap")
+#give_engagement_data("remap")
 
 def calculate_metrics(inputFile, outputFile, cp):
     data = np.load(inputFile)

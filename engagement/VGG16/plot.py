@@ -6,29 +6,31 @@ from scipy.stats import rankdata
 
 def plot_one_npz(fileName, drift_type):
     data = np.load(fileName)
-    begin = 0
+    begin = 30
     indices = data["indices"][begin:]
+    i2 = data["indices"][10:]
     # accArray_Base = data["accBase"]
     # accArray_E = data["accE"]
     # accArray_P = data["accP"]
     # accEiPi = data["accEiPi"]
     print("duration: {0}".format(data["duration"]))
 
-    # #plt.plot(indices, data["accBaseUpdated"][begin:], label="Base update")
-    # #plt.plot(indices, data["accFreezing"][begin:], label="Freezing")
-    # plt.plot(indices, data["accBase"][begin:], label="Base line")
-    # plt.plot(indices, data["accEiPi"][begin:], label = "NN-Patching")
-    # plt.plot(indices, data["accMSPi"][begin:], label = "NN-Patching ms")
-    # # plt.plot(indices, data["accE"][begin:], label="Ei")
-    # # plt.plot(indices, data["accMS"][begin:], label="MS")
-    # # plt.plot(indices, data["accP"][begin:], label="Pi")
-    # plt.title("Dog-Monkey (VGG16) - {0}".format(drift_type))
-    # plt.ylabel("Accuracy")
-    # plt.xlabel("Batch")
-    # plt.legend()
-    # plt.show()
+    #plt.plot(indices, data["accBaseUpdated"][begin:], label="Base update")
+    #plt.plot(indices, data["accFreezing"][begin:], label="Freezing")
+    plt.plot(i2, data["accBase"][10:], label="Base line")
+    plt.plot(indices, data["accEiPi"][begin:], label = "NN-Patching")
+    plt.plot(indices, data["accMSPi"][begin:], label = "NN-Patching ms")
+    # plt.plot(indices, data["accE"][begin:], label="Ei")
+    # plt.plot(indices, data["accMS"][begin:], label="MS")
+    # plt.plot(indices, data["accP"][begin:], label="Pi")
+    plt.title("Dog-Monkey (VGG16) - {0}".format(drift_type))
+    plt.ylabel("Accuracy")
+    plt.xlabel("Batch")
+    plt.legend()
+    plt.show()
 
-# drift_type = "remap"
+drift_type = "transfer"
+plot_one_npz("vgg_{0}_base.npz".format(drift_type), drift_type)
 # layers = [1,2,3,4,5]
 # for layer in layers:
 #     plot_one_npz("vgg_{0}_{1}_simple.npz".format(drift_type, layer), drift_type)
@@ -77,7 +79,7 @@ def give_engagement_data(drift_type):
     print(drift_type + ": Model selector")
     print(acc_list_ms)
 
-give_engagement_data("transfer")
+# give_engagement_data("transfer")
 
 def calculate_metrics(input_file, cp):
     data = np.load(input_file)

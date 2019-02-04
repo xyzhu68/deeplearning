@@ -47,8 +47,9 @@ def plot_Ei_n(drift_type):
 
 def plot_one_npz(fileName, drift_type):
     data = np.load(fileName)
-    begin = 10
+    begin = 35
     indices = data["indices"][begin:]
+    i2 = data["indices"][10:]
     # accArray_Base = data["accBase"]
     # accArray_E = data["accE"]
     # accArray_P = data["accP"]
@@ -57,7 +58,8 @@ def plot_one_npz(fileName, drift_type):
 
     plt.plot(indices, data["accBaseUpdated"][begin:], label="Base update")
     plt.plot(indices, data["accFreezing"][begin:], label="Freezing")
-    plt.plot(indices, data["accBase"][begin:], label="Base line")
+    plt.plot(i2, data["accBase"][10:], label="Base line")
+    #plt.plot(indices, data["accBase"][begin:], label="Base line")
     plt.plot(indices, data["accEiPi"][begin:], label = "NN-Patching")
     plt.plot(indices, data["accMSPi"][begin:], label = "NN-Patching ms")
     plt.title("MNIST - {0}".format(drift_type))
@@ -66,9 +68,14 @@ def plot_one_npz(fileName, drift_type):
     plt.legend()
     plt.show()
 
-# drift_type = "remap"
+    final_acc_ei = np.mean(data["accEiPi"][-5:])
+    final_acc_ms = np.mean(data["accMSPi"][-5:])
+    print("final ei: {0}".format(final_acc_ei))
+    print("final ms: {0}".format(final_acc_ms))
+
+# drift_type = "rotate"
 # layer = 7
-# plot_one_npz("mnist_engage_{0}_{1}.npz".format(drift_type, layer), drift_type)
+# plot_one_npz("random_patching/mnist_engage_{0}_{1}.npz".format(drift_type, layer), drift_type)
 
 def plot_engagement(drift_type):
     acc_list = []
@@ -97,12 +104,14 @@ def give_engagement_data(drift_type):
         acc_list_ms.append(np.mean(final_acc_ms))
         final_acc_ei = data["accEiPi"][-5]
         acc_list_ei.append(np.mean(final_acc_ei))
+        print("duration: ", data["duration"])
     print(drift_type + ": Error detector")
     print(acc_list_ei)
     print(drift_type + ": Model selector")
     print(acc_list_ms)
 
-give_engagement_data("transfer")
+
+#give_engagement_data("flip")
 
 def calculate_metrics(inputFile, outputFile, cp):
     data = np.load(inputFile)
@@ -213,6 +222,7 @@ def plot_filters(drift_type):
     accs = []
     for i in range(4):
         accs.append(np.mean(data[i]["accMSPi"][-40:]))
+        print(accs[-1])
 
     x = np.array([0,1,2,3])
     xticks = ["16", "32", "64", "128"]
@@ -238,6 +248,7 @@ def plot_filter_time(drift_type):
         t = datetime.strptime(str(d_str).split(".")[0],"%H:%M:%S")
         delta = timedelta(hours=t.hour, minutes=t.minute, seconds=t.second)
         times.append(delta.total_seconds())
+        print(times[-1])
 
     x = np.array([0,1,2,3])
     xticks = ["16", "32", "64", "128"]
@@ -247,4 +258,4 @@ def plot_filter_time(drift_type):
     plt.ylabel("Running time")
     plt.show()
 
-#plot_filter_time("rotate")
+plot_filter_time("rotate")
