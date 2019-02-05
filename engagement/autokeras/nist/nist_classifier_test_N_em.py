@@ -148,19 +148,19 @@ for i in range(nbBaseBatches, nbBatches):
     elif drift_type == "transfer":
         X, y, _ = transfer(X_org, y_org, i < nbBatches/2)
 
-    pred = model_C0.predict(X)
-    pred_cls = np.argmax(pred, axis=1)
-    y_cls = np.argmax(y, axis=1)
-    leng = len(pred_cls)
-    count = 0
-    for i in range(leng):
-        if pred_cls[i] == y_cls[i]:
-            count += 1
-    print("ACC: ", count / leng)
-    bdddc.add_element(pred_cls, y_cls, classifier_changed=False)
+    # pred = model_C0.predict(X)
+    # pred_cls = np.argmax(pred, axis=1)
+    # y_cls = np.argmax(y, axis=1)
+    # leng = len(pred_cls)
+    # count = 0
+    # for i in range(leng):
+    #     if pred_cls[i] == y_cls[i]:
+    #         count += 1
+    # print("ACC: ", count / leng)
+    # bdddc.add_element(pred_cls, y_cls, classifier_changed=False)
 
-    changed = bdddc.detected_change()
-    # changed = is_drift(model_C0, bdddc, X, y)
+    # changed = bdddc.detected_change()
+    changed = is_drift(model_C0, bdddc, X, y)
 
     print("changed: ", changed)
 
