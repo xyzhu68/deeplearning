@@ -69,38 +69,46 @@ train_generator = train_datagen.flow_from_directory(
 
 model_C0 = make_conv_model(nbFilters, False)
 
-bdddc = BDDDC()
+# 0.997, 0.9998
+# bdddc = BDDDC(warn_level=0.99, drift_level=0.999,
+#                  decay_shape_a=0.0005, decay_shape_b=-7.0,
+#                  reset_counts=True,
+#                  prior_error_rate=None,
+#                  n_stable_assumed_batches=1)
+
+bdddc = BDDDC(warn_level=0.999, drift_level=0.9999,n_stable_assumed_batches=2)
 
 
-# training in base phase
-for i in range(nbBaseBatches):
-#for i in range(1): # !!!!!!!!!!!!
-    print(i)
-    X, y = train_generator.next()
-    changeData = bool(random.getrandbits(1)) # used for create data for Ei
+# # training in base phase
+# for i in range(nbBaseBatches):
+# #for i in range(1): # !!!!!!!!!!!!
+#     print(i)
+#     X, y = train_generator.next()
+#     changeData = bool(random.getrandbits(1)) # used for create data for Ei
 
-    if drift_type == "flip":
-        X, y, _ = flip_images(X, y, False)
-        x_t, y_t, _ = flip_images(X, y, True)
-    elif drift_type == "rotate":
-        X, y, _ = rot(X, y, 0)
-        x_t, y_t, _ = rot(X, y, random.randint(1, 181))
-    elif drift_type == "appear":
-        X, y, _ = appear(X, y, True)
-        x_t, y_t, _ = appear(X, y, False)
-    elif drift_type == "remap":
-        X, y, _ = remap(X, y, True)
-        x_t, y_t, _ = remap(X, y, False)
-    elif drift_type == "transfer":
-        X, y, _ = transfer(X, y, True)
-        x_t, y_t, _ = transfer(X, y, False)
-    else:
-        print("Unknown drift type")
-        exit()
+#     if drift_type == "flip":
+#         X, y, _ = flip_images(X, y, False)
+#         x_t, y_t, _ = flip_images(X, y, True)
+#     elif drift_type == "rotate":
+#         X, y, _ = rot(X, y, 0)
+#         x_t, y_t, _ = rot(X, y, random.randint(1, 181))
+#     elif drift_type == "appear":
+#         X, y, _ = appear(X, y, True)
+#         x_t, y_t, _ = appear(X, y, False)
+#     elif drift_type == "remap":
+#         X, y, _ = remap(X, y, True)
+#         x_t, y_t, _ = remap(X, y, False)
+#     elif drift_type == "transfer":
+#         X, y, _ = transfer(X, y, True)
+#         x_t, y_t, _ = transfer(X, y, False)
+#     else:
+#         print("Unknown drift type")
+#         exit()
 
-    model_C0.fit(X, y, batch_size=20, epochs = epochs)
+#     model_C0.fit(X, y, batch_size=20, epochs = epochs)
 
-
+# model_C0.save_weights("C0_weigths_{0}.h5".format(drift_type))
+model_C0.load_weights("C0_weigths_{0}.h5".format(drift_type))
 
 #C0Weights = "C0_weigths_{0}.h5".format(drift_type)
 #model_C0.save_weights(C0Weights)
