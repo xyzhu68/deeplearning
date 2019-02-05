@@ -54,9 +54,9 @@ def plot_Ei_n(drift_type):
 
 def plot_one_npz(fileName, drift_type):
     data = np.load(fileName)
-    begin = 30
+    begin = 0
     indices = data["indices"][begin:]
-    i2 = data["indices"][10:]
+    i2 = data["indicesC0"][10:]
     # accArray_Base = data["accBase"]
     # accArray_E = data["accE"]
     # accArray_P = data["accP"]
@@ -74,9 +74,18 @@ def plot_one_npz(fileName, drift_type):
     plt.legend()
     plt.show()
 
-drift_type = "transfer"
+    final_acc_ei = np.mean(data["accEiPi"][-5:])
+    final_acc_ms = np.mean(data["accMSPi"][-5:])
+    print("final ei: {0}".format(final_acc_ei))
+    print("final ms: {0}".format(final_acc_ms))
+    avg_acc_ei = np.mean(data["accEiPi"][-50:])
+    avg_acc_ms = np.mean(data["accMSPi"][-50:])
+    print("avg ei: {0}".format(avg_acc_ei))
+    print("avg ms: {0}".format(avg_acc_ms))
+
+drift_type = "rotate"
 layer = 4
-plot_one_npz("random_patching/nist_engage_{0}_{1}.npz".format(drift_type, layer), drift_type)
+plot_one_npz("nist_engage_{0}_{1}_weighted_beta.npz".format(drift_type, layer), drift_type)
 
 def plot_engagement(drift_type):
     acc_list = []

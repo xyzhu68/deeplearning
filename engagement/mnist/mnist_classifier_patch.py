@@ -10,6 +10,7 @@ import sys
 import matplotlib.pyplot as plt
 from keras.activations import relu, softmax, sigmoid
 import datetime
+from beta_distribution_drift_detector.bdddc import BDDDC
 
 from data_provider import *
 from model_provider import *
@@ -116,6 +117,15 @@ def build_freez_model(weights):
     freeze_model(model_conv)
     return model_conv
 
+def is_drift(C0_model, detector, X, y):
+    pred = C0_model.predict(X)
+    pred_cls = np.argmax(pred, axis=1)
+    y_cls = np.argmax(y, axis=1)
+    
+    detector.add_element(pred_cls, y_cls, classifier_changed=False)
+
+    return detector.detected_change()
+
 #  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 beginTime = datetime.datetime.now()
@@ -140,6 +150,9 @@ accArray_Base_Updated = []
 accEiPi = [] # accuracy of Ei + Pi
 accMSPi = [] # accuracy of Model Selector + P
 accArray_Freezing = [] # accuracy of freezing model
+
+# for change point detection
+bdddc = BDDDC()
 
 # get data
 gen = data_generator(sizeOneBatch)
@@ -201,7 +214,8 @@ for i in range(nbBaseBatches, nbBatches):
         X, y, _ = transfer(X_org, y_org, i < nbBatches/2)
 
 
-    if i >= 50:
+    if is_drift(model_C0, bdddc, X, y):
+        print("drift detected at batch {0}".format(i))
         C0_inter_data = C0_intermedia.predict(X)
         accEiPi.append(calc_accuracy(model_C0, model_E, model_P, X, y, C0_inter_data))
         accMSPi.append(calc_accuracy(model_C0, model_ms, model_P, X, y, C0_inter_data))
@@ -256,7 +270,7 @@ for i in range(nbBaseBatches, nbBatches):
 
         indices.append(i)
     
-    loss_c0, acc_c0 = model_C0.evaluate(X, y), batch_size=50)
+    loss_c0, acc_c0 = model_C0.evaluate(X, y, batch_size=50)
     accArray_Base.append(acc_c0)
     indices_C0.append(i)
     

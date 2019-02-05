@@ -47,9 +47,9 @@ def plot_Ei_n(drift_type):
 
 def plot_one_npz(fileName, drift_type):
     data = np.load(fileName)
-    begin = 35
+    begin = 0
     indices = data["indices"][begin:]
-    i2 = data["indices"][10:]
+    i2 = data["indicesC0"][10:]
     # accArray_Base = data["accBase"]
     # accArray_E = data["accE"]
     # accArray_P = data["accP"]
@@ -72,10 +72,14 @@ def plot_one_npz(fileName, drift_type):
     final_acc_ms = np.mean(data["accMSPi"][-5:])
     print("final ei: {0}".format(final_acc_ei))
     print("final ms: {0}".format(final_acc_ms))
+    avg_acc_ei = np.mean(data["accEiPi"][-46:])
+    avg_acc_ms = np.mean(data["accMSPi"][-46:])
+    print("avg ei: {0}".format(avg_acc_ei))
+    print("avg ms: {0}".format(avg_acc_ms))
 
-# drift_type = "rotate"
-# layer = 7
-# plot_one_npz("random_patching/mnist_engage_{0}_{1}.npz".format(drift_type, layer), drift_type)
+drift_type = "rotate"
+layer = 7
+plot_one_npz("mnist_engage_{0}_{1}_weighted_beta.npz".format(drift_type, layer), drift_type)
 
 def plot_engagement(drift_type):
     acc_list = []
@@ -258,4 +262,4 @@ def plot_filter_time(drift_type):
     plt.ylabel("Running time")
     plt.show()
 
-plot_filter_time("rotate")
+#plot_filter_time("rotate")

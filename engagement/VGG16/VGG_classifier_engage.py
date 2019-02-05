@@ -12,6 +12,7 @@ import os
 import matplotlib.pyplot as plt
 from keras.activations import relu, softmax, sigmoid
 import datetime
+from beta_distribution_drift_detector.bdddc import BDDDC
 
 from data_provider import *
 
@@ -139,6 +140,15 @@ def make_vgg_model(Ei):
 
     return model
                 
+def is_drift(C0_model, detector, X, y):
+    pred = C0_model.predict(X)
+    pred_cls = np.argmax(pred, axis=1)
+    y_cls = np.argmax(y, axis=1)
+    
+    detector.add_element(pred_cls, y_cls, classifier_changed=False)
+
+    return detector.detected_change()
+
 #  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 beginTime = datetime.datetime.now()
@@ -159,19 +169,18 @@ train_generator = train_datagen.flow_from_directory(
     class_mode="categorical")
 
 model_C0 = make_C0_model()
-#exit() # !!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-#lossArray_E = []
-accArray_E = []
-accArray_MS = []
-#lossArray_P = []
-accArray_P = []
-indices = []
-accArray_Base = []
-#lossArray_Base = []
-accEiPi = []
-accMSPi = []
+accArray_E = [] # accuracy of Ei
+accArray_MS = [] # accuracy of MS
+accArray_P = [] # accuracy of Pi
+indices = [] # index of batches for E and P ...
+indices_C0 = [] # index of batches for C0
+accArray_Base = [] # accuray of C0 (base model)
+accEiPi = [] # accuracy of Ei + Pi
+accMSPi = [] # accuracy of Model Selector + P
 
+# for change point detection
+bdddc = BDDDC()
 
 # training in base phase
 for i in range(nbBaseBatches):
@@ -203,72 +212,72 @@ for i in range(nbBaseBatches, nbBatches):
     
     X_org, y_org = train_generator.next()
     
-    data_changed = True
     X = None
     y = None
     if drift_type == "appear":
         X, y, _ = appear(X_org, y_org, False)
     elif drift_type == "remap":
         X, y, _ = remap(X_org, y_org, i < nbBatches/2)
-        data_changed = i >= nbBatches/2
     elif drift_type == "transfer":
         X, y, _ = transfer(X_org, y_org, i < nbBatches/2)
-        data_changed = i >= nbBatches/2
 
-    accEiPi.append(calc_accuracy(model_C0, model_E, model_P, X, y))
-    accMSPi.append(calc_accuracy(model_C0, model_ms, model_P, X, y))
-    x_Ei = []
-    y_Ei = []
-    x_ms = []
-    y_ms = []
-    base_correct = 0
-    for index in range(len(X)):
-        predictC0 = model_C0.predict(X[index].reshape(1, img_size, img_size, 3), batch_size=1)
-        predictP = model_P.predict(X[index].reshape(1, img_size, img_size, 3), batch_size=1)
-        if np.argmax(predictC0) == np.argmax(y[index]):
-            x_Ei.append(X[index])
-            y_Ei.append(0)
-            base_correct += 1
-        else:
-            x_Ei.append(X[index])
-            y_Ei.append(1)
+    if is_drift(model_C0, bdddc, X, y):
+        print("drift detected at batch {0}".format(i))
+        accEiPi.append(calc_accuracy(model_C0, model_E, model_P, X, y))
+        accMSPi.append(calc_accuracy(model_C0, model_ms, model_P, X, y))
+        x_Ei = []
+        y_Ei = []
+        x_ms = []
+        y_ms = []
+        for index in range(len(X)):
+            predictC0 = model_C0.predict(X[index].reshape(1, img_size, img_size, 3), batch_size=1)
+            predictP = model_P.predict(X[index].reshape(1, img_size, img_size, 3), batch_size=1)
+            if np.argmax(predictC0) == np.argmax(y[index]):
+                x_Ei.append(X[index])
+                y_Ei.append(0)
+            else:
+                x_Ei.append(X[index])
+                y_Ei.append(1)
 
-        yLabel = np.argmax(y[index])
-        if predictC0[0][yLabel] > predictP[0][yLabel]:
-            x_ms.append(X[index])
-            y_ms.append(0)
-        else:
-            x_ms.append(X[index])
-            y_ms.append(1)
+            yLabel = np.argmax(y[index])
+            if predictC0[0][yLabel] > predictP[0][yLabel]:
+                x_ms.append(X[index])
+                y_ms.append(0)
+            else:
+                x_ms.append(X[index])
+                y_ms.append(1)
 
 
-    x_Ei = np.asarray(x_Ei)
-    x_Ei = x_Ei.reshape(-1, img_size, img_size, 3)
-    loss_Ei, acc_Ei = model_E.evaluate(x_Ei, y_Ei, batch_size=bz)
-    accArray_E.append(acc_Ei)
-    model_E.fit(x_Ei, y_Ei, batch_size = bz, epochs = epochs)
+        x_Ei = np.asarray(x_Ei)
+        x_Ei = x_Ei.reshape(-1, img_size, img_size, 3)
+        loss_Ei, acc_Ei = model_E.evaluate(x_Ei, y_Ei, batch_size=bz)
+        accArray_E.append(acc_Ei)
+        model_E.fit(x_Ei, y_Ei, batch_size = bz, epochs = epochs)
 
-    x_ms = np.asarray(x_ms)
-    x_ms = x_ms.reshape(-1, img_size, img_size, 3)
-    loss_ms, acc_ms = model_ms.evaluate(x_ms, y_ms, batch_size=bz)
-    accArray_MS.append(acc_ms)
-    model_ms.fit(x_ms, y_ms, batch_size = bz, epochs = epochs)
+        x_ms = np.asarray(x_ms)
+        x_ms = x_ms.reshape(-1, img_size, img_size, 3)
+        loss_ms, acc_ms = model_ms.evaluate(x_ms, y_ms, batch_size=bz)
+        accArray_MS.append(acc_ms)
+        model_ms.fit(x_ms, y_ms, batch_size = bz, epochs = epochs)
 
-    loss_Pi, acc_Pi = model_P.evaluate(X, y, batch_size=bz)
-    accArray_P.append(acc_Pi)
-    model_P.fit(X, y, batch_size=bz, epochs=epochs)
+        loss_Pi, acc_Pi = model_P.evaluate(X, y, batch_size=bz)
+        accArray_P.append(acc_Pi)
+        model_P.fit(X, y, batch_size=bz, epochs=epochs)
 
-    
-    indices.append(i)
+        
+        indices.append(i)
 
-    accArray_Base.append(base_correct / len(X))
+    loss_c0, acc_c0 = model_C0.evaluate(X, y, batch_size=50)
+    accArray_Base.append(acc_c0)
+    indices_C0.append(i)
     
    
 endTime = datetime.datetime.now()
 print(endTime - beginTime)
 
-npFileName = "vgg_{0}_{1}.npz".format(drift_type, blockNumber)
+npFileName = "vgg_{0}_{1}_beta.npz".format(drift_type, blockNumber)
 np.savez(npFileName, accBase = accArray_Base,
+                     indicesC0 = indices_C0,
                      accE = accArray_E,
                      accP = accArray_P,
                      accMS = accArray_MS,
