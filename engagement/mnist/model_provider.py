@@ -40,19 +40,3 @@ def make_conv_model(nbFilters, noTop):
     model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['categorical_accuracy'])
 
     return model
-
-def make_dnn_model(withCompile):
-    model = Sequential()
-    model.add(Dense(786, name="l1", activation='relu', input_shape=(784,)))
-    model.add(Dense(2048, name="l2", activation='relu'))
-    model.add(Dense(1024, name="l3", activation="relu"))
-    model.add(Dense(1024, name="l4", activation="relu"))
-    model.add(Dense(512, name="l5", activation="relu"))
-    model.add(Dense(128, name="l6", activation="relu"))
-    model.add(Dropout(0.5, name="l7"))
-    model.add(Dense(10, name="l8", activation="softmax"))
-    if withCompile:
-        model.compile(loss='categorical_crossentropy',
-                      optimizer='adadelta', metrics=['categorical_accuracy'])
-
-    return model

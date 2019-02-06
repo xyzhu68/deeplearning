@@ -163,15 +163,15 @@ for i in range(nbBaseBatches):
     X, y = next(gen)
 
     if drift_type == "flip":
-        X, y, _ = flip_images(X, y, False)
+        X, y = flip_images(X, y, False)
     elif drift_type == "rotate":
-        X, y, _ = rot(X, y, 0)
+        X, y = rot(X, y, 0)
     elif drift_type == "appear":
-        X, y, _ = appear(X, y, True)
+        X, y = appear(X, y, True)
     elif drift_type == "remap":
-        X, y, _ = remap(X, y, True)
+        X, y = remap(X, y, True)
     elif drift_type == "transfer":
-        X, y, _ = transfer(X, y, True)
+        X, y = transfer(X, y, True)
     else:
         print("Unknown drift type")
         exit()
@@ -196,11 +196,11 @@ for i in range(nbBaseBatches, nbBatches):
     X = None
     y = None
     if drift_type == "flip":
-        X, y, _ = flip_images(X_org, y_org, i >= nbBatches/2)
+        X, y = flip_images(X_org, y_org, i >= nbBatches/2)
     elif drift_type == "appear":
-        X, y, _ = appear(X_org, y_org, False)
+        X, y = appear(X_org, y_org, False)
     elif drift_type == "remap":
-        X, y, _ = remap(X_org, y_org, i < nbBatches/2)
+        X, y = remap(X_org, y_org, i < nbBatches/2)
     elif (drift_type == "rotate"):
         if i > 50:
             angle += 5
@@ -209,12 +209,16 @@ for i in range(nbBaseBatches, nbBatches):
         else:
             angle = 0
             data_changed = False
-        X, y, _ = rot(X_org, y_org, angle)
+        X, y = rot(X_org, y_org, angle)
     elif drift_type == "transfer":
-        X, y, _ = transfer(X_org, y_org, i < nbBatches/2)
+        X, y = transfer(X_org, y_org, i < nbBatches/2)
 
-
-    if is_drift(model_C0, bdddc, X, y):
+    drifted = False
+    if drift_type == "appear":
+        drifted = True # appear has no base phase
+    else:
+        drifted = is_drift(model_C0, bdddc, X, y)
+    if drifted:
         print("drift detected at batch {0}".format(i))
         C0_inter_data = C0_intermedia.predict(X)
         accEiPi.append(calc_accuracy(model_C0, model_E, model_P, X, y, C0_inter_data))
