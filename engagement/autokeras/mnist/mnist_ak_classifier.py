@@ -10,6 +10,7 @@ import sys
 import matplotlib.pyplot as plt
 from keras.activations import relu, softmax, sigmoid
 import datetime
+from beta_distribution_drift_detector.bdddc import BDDDC
 
 from data_provider import *
 from model_provider import *
@@ -70,6 +71,14 @@ def calc_accuracy(modelC0, modelEi, modelCi, X, y):
     print("ACC: ", correct / len(X))
     return correct / len(X)
 
+def is_drift(C0_model, detector, X, y):
+    pred = C0_model.predict(X)
+    pred_cls = np.argmax(pred, axis=1)
+    y_cls = np.argmax(y, axis=1)
+    
+    detector.add_element(pred_cls, y_cls, classifier_changed=False)
+
+    return detector.detected_change()
 
 #  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -91,7 +100,8 @@ indices = [] # index of batches
 accArray_Base = [] # accuray of C0 (base model)
 accEiPi = [] # accuracy of Ei + Pi
 
-
+# for change point detection
+bdddc = BDDDC()
 
 # get data
 gen = data_generator(sizeOneBatch)
@@ -102,15 +112,9 @@ for i in range(nbBaseBatches):
     X, y = next(gen)
 
     if drift_type == "flip":
-        X, y, _ = flip_images(X, y, False)
-    elif drift_type == "rotate":
-        X, y, _ = rot(X, y, 0)
-    elif drift_type == "appear":
-        X, y, _ = appear(X, y, True)
+        X, y = flip_images(X, y, False)
     elif drift_type == "remap":
-        X, y, _ = remap(X, y, True)
-    elif drift_type == "transfer":
-        X, y, _ = transfer(X, y, True)
+        X, y = remap(X, y, True)
     else:
         print("Unknown drift type")
         exit()
@@ -124,17 +128,23 @@ model_E = load_model('autokeras_mnist_Ei_{0}_{1}.h5'.format(drift_type, hours))
 x = model_E.output
 x = Activation('softmax', name='activation_add')(x)
 model_E = Model(model_E.input, x)
-sgd = optimizers.SGD(lr=0.001)
-# model_E.compile(optimizer='adadelta', loss='categorical_crossentropy', metrics=['accuracy']) # categorical_crossentropy
-model_E.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=['accuracy'])
+
+if drift_type == "flip":
+    model_E.compile(optimizer='adadelta', loss='categorical_crossentropy', metrics=['accuracy'])
+else:
+    sgd = optimizers.SGD(lr=0.001)
+    model_E.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=['accuracy'])
 
 model_P = load_model('autokeras_mnist_Ci_{0}_{1}.h5'.format(drift_type, hours))
 x = model_P.output
 x = Activation('softmax', name='activation_add')(x)
 model_P = Model(model_P.input, x)
-sgd2 = optimizers.SGD(lr=0.001)
-# model_P.compile(optimizer='adadelta', loss='categorical_crossentropy', metrics=['accuracy']) # categorical_crossentropy
-model_P.compile(optimizer=sgd2, loss='categorical_crossentropy', metrics=['accuracy'])
+
+if drift_type == "flip":
+    model_P.compile(optimizer='adadelta', loss='categorical_crossentropy', metrics=['accuracy'])
+else:
+    sgd2 = optimizers.SGD(lr=0.001)
+    model_P.compile(optimizer=sgd2, loss='categorical_crossentropy', metrics=['accuracy'])
 
 # adaption: data changed
 angle = 0 # for rotate
@@ -147,62 +157,50 @@ for i in range(nbBaseBatches, nbBatches):
     X = None
     y = None
     if drift_type == "flip":
-        X, y, _ = flip_images(X_org, y_org, i >= nbBatches/2)
-    elif drift_type == "appear":
-        X, y, _ = appear(X_org, y_org, False)
+        X, y = flip_images(X_org, y_org, i >= nbBatches/2)
     elif drift_type == "remap":
-        X, y, _ = remap(X_org, y_org, i < nbBatches/2)
-    elif (drift_type == "rotate"):
-        if i > 50:
-            angle += 5
-            if angle > 180:
-                angle = 180
-        else:
-            angle = 0
-            data_changed = False
-        X, y, _ = rot(X_org, y_org, angle)
-    elif drift_type == "transfer":
-        X, y, _ = transfer(X_org, y_org, i < nbBatches/2)
+        X, y = remap(X_org, y_org, i < nbBatches/2)
 
-    accEiPi.append(calc_accuracy(model_C0, model_E, model_P, X, y))
-    x_Ei = []
-    y_Ei = []
-    base_correct = 0
-    for index in range(len(X)):
-        predictC0 = model_C0.predict(X[index].reshape(1, 28, 28, 1), batch_size=1)
-        predictP = model_P.predict(X[index].reshape(1, 28, 28, 1), batch_size=1)
-        if np.argmax(predictC0) == np.argmax(y[index]):
-            x_Ei.append(X[index])
-            y_Ei.append(0)
-            base_correct += 1
-        else:
-            x_Ei.append(X[index])
-            y_Ei.append(1)
+    if is_drift(model_C0, bdddc, X, y):
+        accEiPi.append(calc_accuracy(model_C0, model_E, model_P, X, y))
+        x_Ei = []
+        y_Ei = []
+        base_correct = 0
+        for index in range(len(X)):
+            predictC0 = model_C0.predict(X[index].reshape(1, 28, 28, 1), batch_size=1)
+            predictP = model_P.predict(X[index].reshape(1, 28, 28, 1), batch_size=1)
+            if np.argmax(predictC0) == np.argmax(y[index]):
+                x_Ei.append(X[index])
+                y_Ei.append(0)
+                base_correct += 1
+            else:
+                x_Ei.append(X[index])
+                y_Ei.append(1)
 
-    y_Ei = to_categorical(y_Ei, 2)
-    x_Ei = np.asarray(x_Ei)
-    x_Ei = x_Ei.reshape(-1, 28, 28, 1)
-    loss_E, acc_E = model_E.evaluate(x_Ei, y_Ei, batch_size=50)
-    accArray_E.append(acc_E)
-    model_E.fit(x_Ei, y_Ei, batch_size = 50, epochs = 10)
-    
-    if drift_type == "remap":
-        y = np.argmax(y, axis=1)
-        y = to_categorical(y, 5)
-        # print(y)
-        # print(y.shape)
-    loss_P, acc_P = model_P.evaluate(X, y, batch_size=50)
-    accArray_P.append(acc_P)
-    print("Ci ACC: ", acc_P)
-    model_P.fit(X, y, batch_size=50, epochs=10)
-    
-    indices.append(i)
+        y_Ei = to_categorical(y_Ei, 2)
+        x_Ei = np.asarray(x_Ei)
+        x_Ei = x_Ei.reshape(-1, 28, 28, 1)
+        loss_E, acc_E = model_E.evaluate(x_Ei, y_Ei, batch_size=50)
+        accArray_E.append(acc_E)
+        model_E.fit(x_Ei, y_Ei, batch_size = 50, epochs = 10)
+        
+        if drift_type == "remap":
+            y = np.argmax(y, axis=1)
+            y = to_categorical(y, 5)
+            # print(y)
+            # print(y.shape)
+        loss_P, acc_P = model_P.evaluate(X, y, batch_size=50)
+        accArray_P.append(acc_P)
+        print("Ci ACC: ", acc_P)
+        model_P.fit(X, y, batch_size=50, epochs=10)
+        
+        indices.append(i)
 
-    accArray_Base.append(base_correct / len(X))
+        accArray_Base.append(base_correct / len(X))
 
-    loopEnd = datetime.datetime.now()
-    print("loop time: ", loopEnd - loopBegin)
-    # break # !!!!!!!!!!!!!!!
+        loopEnd = datetime.datetime.now()
+        print("loop time: ", loopEnd - loopBegin)
+        # break # !!!!!!!!!!!!!!!
     
    
 endTime = datetime.datetime.now()
@@ -216,20 +214,5 @@ np.savez(npFileName, accBase = accArray_Base,
                      indices=indices,
                      duration=str(endTime - beginTime))
 
-# save models
-# model_C0.save("model_C0_simple_{0}_{1}.h5".format(drift_type, nbFilters))
-# model_Ei.save("model_Ei_simple_{0}_{1}.h5".format(drift_type, nbFilters))
-# model_Ci.save("model_Pi_simple_{0}_{1}.h5".format(drift_type, nbFilters))
-
-# result of accuracy
-# plt.plot(indices, accArray_Base, label="acc base")
-# plt.plot(indices, accArray_E, label="acc Ei")
-# plt.plot(indices, accArray_P, label="acc Pi")
-# plt.plot(indices, accEiPi, label="acc Ei+Pi")
-# plt.title("Accuracy")
-# plt.ylabel("Accuracy")
-# plt.xlabel("Batch")
-# plt.legend()
-# plt.show()
 
 

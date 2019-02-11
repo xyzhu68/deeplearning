@@ -14,8 +14,8 @@ def flip_images(X, y, doFlip):
     X = X.reshape(-1, 28, 28)
     x_array = []
     for image in X:
-        axis = bool(random.getrandbits(1))
-        flipped = np.flip(image, axis)
+        flipped = np.flip(image, 0)
+        flipped = np.flip(flipped, 1)
         x_array.append(flipped)
     x_array = np.asarray(x_array)
     X = x_array.reshape(-1, 28, 28, 1)
